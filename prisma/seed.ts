@@ -12,6 +12,18 @@ const prisma = new PrismaClient();
 const FOUNDED = 2011;
 const yearsExp = new Date().getFullYear() - FOUNDED;
 
+// Placeholder media (all replaceable in God Mode). Picsum is reliable and
+// hotlinkable; the hero video is a stock loop with the poster image acting as
+// a seamless fallback if the video is ever unavailable.
+const PICSUM = (seed: string, w = 1920, h = 1080) =>
+  `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
+const HERO_VIDEO =
+  "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4";
+
+// Bump this when seed content changes to roll it out on the next deploy.
+// Do NOT bump once clients start editing content in God Mode.
+const SEED_VERSION = "2";
+
 async function reset() {
   // Delete children before parents to respect FKs.
   await prisma.section.deleteMany();
@@ -33,11 +45,15 @@ async function reset() {
 }
 
 async function main() {
-  // Idempotent: skip if already initialized so redeploys never wipe edits.
-  // Force a full re-seed with SEED_FORCE=1.
-  const existing = await prisma.siteSettings.count();
-  if (existing > 0 && !process.env.SEED_FORCE) {
-    console.log("✓ Database already initialized — skipping seed.");
+  // Re-seed only when SEED_VERSION changes (rolls out new seed content once on
+  // deploy) or when SEED_FORCE=1. Otherwise skip, preserving any edits.
+  const current = await prisma.siteSettings.findFirst();
+  const storedVersion =
+    current && current.extra && typeof current.extra === "object"
+      ? (current.extra as Record<string, unknown>).seedVersion
+      : null;
+  if (current && storedVersion === SEED_VERSION && !process.env.SEED_FORCE) {
+    console.log(`Seed up to date (v${SEED_VERSION}) — skipping.`);
     return;
   }
 
@@ -69,6 +85,7 @@ async function main() {
       metaTitle: "Your Agency — Digital Transformation, Branding & AI-Ready Websites",
       metaDescription:
         "We become your digital department: branding, AI-ready websites with a CMS you own, SEO/GEO, content, and growth — one premium team.",
+      extra: { seedVersion: SEED_VERSION },
     },
   });
 
@@ -107,7 +124,7 @@ async function main() {
     {
       slug: "brand-strategy-identity",
       title: "Brand Strategy & Identity",
-      icon: "🎯",
+      icon: "target",
       summary: "Positioning, narrative, and a modern visual identity that makes you the obvious choice.",
       description:
         "We start with strategy: who you serve, why you win, and the story that makes it land. Then we design a complete identity — logo, system, guidelines — that looks as trustworthy online as you are in person.\n\nEvery brand we build is engineered to work across your website, content, and campaigns as one coherent system.",
@@ -115,7 +132,7 @@ async function main() {
     {
       slug: "web-design-development",
       title: "Web Design & Development",
-      icon: "🖥️",
+      icon: "monitor",
       summary: "AI-ready, database-driven websites that are fast, beautiful, and built to convert.",
       description:
         "We design and build modern websites where nothing that might change is hardcoded. Every page, section, and word is dynamic and editable — the frontend is just a rendering engine over your content.\n\nThe result is a site that loads fast, ranks well, and moves visitors toward action.",
@@ -123,7 +140,7 @@ async function main() {
     {
       slug: "god-mode-cms",
       title: "God Mode CMS Platform",
-      icon: "⚙️",
+      icon: "settings",
       summary: "An enterprise admin platform you fully own — edit anything, no developer required.",
       description:
         "Every website ships with God Mode: a complete content, configuration, and operations console. Pages, sections, media, forms, branding, SEO, navigation, users and roles — all under your control.\n\nNo agency lock-in. No maintenance fees to change text or images. You own the platform and everything in it.",
@@ -131,7 +148,7 @@ async function main() {
     {
       slug: "ai-geo-optimization",
       title: "AI & GEO Optimization",
-      icon: "🤖",
+      icon: "bot",
       summary: "Get discovered by AI search with Generative Engine Optimization and structured authority.",
       description:
         "Traditional SEO is no longer enough. We structure your content, metadata, schema, and authority signals so AI systems understand and recommend your business.\n\nWe also wire in AI-powered blog generation so you can publish industry-relevant articles on demand.",
@@ -139,7 +156,7 @@ async function main() {
     {
       slug: "seo-search-visibility",
       title: "SEO & Search Visibility",
-      icon: "🔍",
+      icon: "search",
       summary: "Technical, on-page, and content SEO that compounds into durable organic growth.",
       description:
         "We make your site fast, crawlable, and authoritative — then build the content and signals that earn rankings for the searches that bring you customers.",
@@ -147,7 +164,7 @@ async function main() {
     {
       slug: "paid-advertising",
       title: "Paid Advertising",
-      icon: "📈",
+      icon: "trending-up",
       summary: "Google and Meta campaigns engineered for measurable, profitable lead generation.",
       description:
         "Strategy, creative, and optimization across Google and Meta. We connect ads to landing pages, tracking, and analytics so every dollar is accountable.",
@@ -155,7 +172,7 @@ async function main() {
     {
       slug: "content-storytelling",
       title: "Content & Storytelling",
-      icon: "✍️",
+      icon: "pen-tool",
       summary: "Narrative-driven content that educates, builds authority, and drives action.",
       description:
         "We don't make generic marketing content. Every brand tells a story, every service explains value, and every page moves visitors forward — from founder stories to case studies and educational content.",
@@ -163,7 +180,7 @@ async function main() {
     {
       slug: "social-short-form-video",
       title: "Social & Short-Form Video",
-      icon: "🎬",
+      icon: "clapperboard",
       summary: "Reels, TikTok, UGC, and motion graphics that keep your brand consistent and current.",
       description:
         "Social strategy plus the content to fuel it: short-form video, motion graphics, and UGC built to grow reach and reinforce your positioning.",
@@ -171,7 +188,7 @@ async function main() {
     {
       slug: "presentations-sales-decks",
       title: "Presentations & Sales Decks",
-      icon: "📊",
+      icon: "presentation",
       summary: "Company profiles, pitch decks, and proposals that win the room.",
       description:
         "Professional, on-brand presentations and business documentation — company profiles, sales decks, pitch decks, and proposals — designed to persuade.",
@@ -179,7 +196,7 @@ async function main() {
     {
       slug: "automation-crm",
       title: "Automation & CRM",
-      icon: "🔗",
+      icon: "workflow",
       summary: "Connect forms, leads, and follow-up into systems that run without you.",
       description:
         "We wire your website forms, CRM, and notifications together so leads are captured, routed, and followed up automatically.",
@@ -187,7 +204,7 @@ async function main() {
     {
       slug: "analytics-reporting",
       title: "Analytics & Reporting",
-      icon: "📉",
+      icon: "bar-chart",
       summary: "Transparent dashboards and reviews so you always know what's working.",
       description:
         "Clear analytics and regular performance reviews that translate data into business decisions — not vanity metrics.",
@@ -195,7 +212,7 @@ async function main() {
     {
       slug: "growth-consulting",
       title: "Growth Consulting",
-      icon: "🚀",
+      icon: "rocket",
       summary: "A senior partner thinking in systems, not deliverables, about your growth.",
       description:
         "We act as your outsourced executive digital department — advising on positioning, priorities, and the systems that scale your business.",
@@ -238,21 +255,21 @@ async function main() {
 
   // ----------------------------- Industries ------------------------------
   const industries = [
-    ["Real Estate", "🏢"],
-    ["Construction", "🏗️"],
-    ["Home Renovation", "🔨"],
-    ["HVAC", "❄️"],
-    ["Roofing", "🏠"],
-    ["Solar", "☀️"],
-    ["Automotive", "🚗"],
-    ["Healthcare", "🩺"],
-    ["Fitness & Gyms", "💪"],
-    ["Spas & Clinics", "💆"],
-    ["Furniture", "🛋️"],
-    ["E-Commerce", "🛍️"],
-    ["Professional Services", "💼"],
-    ["Startups", "⚡"],
-    ["Corporate", "🏛️"],
+    ["Real Estate", "building-2"],
+    ["Construction", "hard-hat"],
+    ["Home Renovation", "hammer"],
+    ["HVAC", "snowflake"],
+    ["Roofing", "house"],
+    ["Solar", "sun"],
+    ["Automotive", "car"],
+    ["Healthcare", "stethoscope"],
+    ["Fitness & Gyms", "dumbbell"],
+    ["Spas & Clinics", "flower-2"],
+    ["Furniture", "sofa"],
+    ["E-Commerce", "shopping-bag"],
+    ["Professional Services", "briefcase"],
+    ["Startups", "zap"],
+    ["Corporate", "landmark"],
   ];
   await prisma.industry.createMany({
     data: industries.map(([name, icon], i) => ({
@@ -323,7 +340,20 @@ async function main() {
     },
   ];
   for (const [i, p] of projects.entries()) {
-    await prisma.project.create({ data: { ...p, order: i, featured: i < 2 } });
+    await prisma.project.create({
+      data: {
+        ...p,
+        order: i,
+        featured: i < 2,
+        coverUrl: PICSUM(`work-${p.slug}`, 1600, 1200),
+        gallery: [
+          PICSUM(`${p.slug}-g1`, 1280, 960),
+          PICSUM(`${p.slug}-g2`, 1280, 960),
+          PICSUM(`${p.slug}-g3`, 1280, 960),
+          PICSUM(`${p.slug}-g4`, 1280, 960),
+        ],
+      },
+    });
   }
 
   // ------------------ Testimonials (PLACEHOLDER samples) -----------------
@@ -390,7 +420,7 @@ async function main() {
   await prisma.faq.createMany({ data: faqs.map((f, i) => ({ ...f, order: i })) });
 
   // ----------------------------- Pages & Sections ------------------------
-  type S = { type: SectionType; data: Record<string, unknown>; enabled?: boolean };
+  type S = { type: SectionType; data: Record<string, unknown>; enabled?: boolean; noBg?: boolean };
   async function createPage(
     page: {
       slug: string;
@@ -410,12 +440,29 @@ async function main() {
         status: "PUBLISHED",
         publishedAt: new Date(),
         sections: {
-          create: sections.map((s, i) => ({
-            type: s.type,
-            order: i,
-            enabled: s.enabled ?? true,
-            data: s.data as Prisma.InputJsonValue,
-          })),
+          create: sections.map((s, i) => {
+            // Every section gets a background; heroes get a video with an image
+            // poster fallback. All of this is editable per-section in God Mode.
+            const bg = s.noBg
+              ? {}
+              : s.type === "HERO"
+                ? {
+                    bgVideoUrl: HERO_VIDEO,
+                    bgPosterUrl: PICSUM(`${page.slug}-hero`),
+                    bgOverlay: 64,
+                  }
+                : {
+                    bgImageUrl: PICSUM(`${page.slug}-${s.type.toLowerCase()}-${i}`),
+                    bgOverlay: s.type === "CTA" ? 72 : 80,
+                  };
+            return {
+              type: s.type,
+              order: i,
+              enabled: s.enabled ?? true,
+              data: s.data as Prisma.InputJsonValue,
+              ...bg,
+            };
+          }),
         },
       },
     });
@@ -724,7 +771,7 @@ async function main() {
     },
   });
 
-  console.log("✓ Seed complete");
+  console.log("Seed complete");
   console.log(`  Pages: ${await prisma.page.count()}, Sections: ${await prisma.section.count()}`);
   console.log(`  Services: ${await prisma.service.count()}, Projects: ${await prisma.project.count()}`);
   console.log(`  Admin login: ${email}`);

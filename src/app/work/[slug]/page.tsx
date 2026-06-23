@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProjectBySlug, isModuleEnabled } from "@/lib/site";
+import { Icon } from "@/components/ui/Icon";
 
 type Params = { params: Promise<{ slug: string }> };
 type Result = { label: string; value: string };
@@ -25,13 +26,18 @@ export default async function WorkDetail({ params }: Params) {
 
   const results = Array.isArray(project.results) ? (project.results as unknown as Result[]) : [];
   const services = Array.isArray(project.services) ? (project.services as string[]) : [];
+  const gallery = Array.isArray(project.gallery)
+    ? (project.gallery as unknown[])
+        .map((g) => (typeof g === "string" ? g : (g as { url?: string }).url || ""))
+        .filter(Boolean)
+    : [];
   const body = (project.description || "").split(/\n\s*\n/).filter(Boolean);
 
   return (
     <article>
       <section className="container-x pt-20 pb-10">
-        <Link href="/work" className="text-sm text-muted hover:text-fg">
-          ← All work
+        <Link href="/work" className="text-sm text-muted hover:text-fg inline-flex items-center gap-1.5">
+          <Icon name="arrow-left" size={15} /> All work
         </Link>
         <div className="mt-6 flex flex-wrap items-center gap-2 text-sm text-muted">
           {project.industry ? <span>{project.industry}</span> : null}
@@ -81,6 +87,23 @@ export default async function WorkDetail({ params }: Params) {
           <div className="max-w-3xl prose-body">
             {body.map((p, i) => (
               <p key={i}>{p}</p>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {gallery.length > 0 ? (
+        <section className="container-x pb-12">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-6">Gallery</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {gallery.map((src, i) => (
+              <div key={i} className="card overflow-hidden aspect-[4/3] group">
+                <img
+                  src={src}
+                  alt={`${project.title} — image ${i + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
             ))}
           </div>
         </section>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getNav, getSettings } from "@/lib/site";
 import { Logo } from "@/components/site/Logo";
+import { Icon } from "@/components/ui/Icon";
 
 export async function SiteHeader() {
   const [settings, nav] = await Promise.all([getSettings(), getNav("HEADER")]);
@@ -34,11 +35,7 @@ export async function SiteHeader() {
         {/* Mobile menu — pure CSS disclosure, no client JS needed */}
         <details className="md:hidden relative">
           <summary className="list-none cursor-pointer p-2 -mr-2 [&::-webkit-details-marker]:hidden">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            <Icon name="menu" size={22} />
           </summary>
           <div className="absolute right-0 mt-3 w-60 card p-3 flex flex-col gap-1">
             {nav.map((item) => (

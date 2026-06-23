@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "@/components/ui/Icon";
 
 export function ContactForm() {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -27,8 +28,8 @@ export function ContactForm() {
   if (state === "done") {
     return (
       <div className="card p-8 text-center">
-        <div className="text-3xl">✓</div>
-        <h3 className="mt-3 font-semibold text-lg">Thank you — we’ll be in touch.</h3>
+        <span className="icon-badge mx-auto"><Icon name="check-circle" size={26} /></span>
+        <h3 className="mt-4 font-semibold text-lg">Thank you — we’ll be in touch.</h3>
         <p className="mt-2 text-sm text-muted">
           Your message has reached us. Expect a reply within one business day.
         </p>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceBySlug, isModuleEnabled } from "@/lib/site";
+import { Icon } from "@/components/ui/Icon";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -26,11 +27,13 @@ export default async function ServiceDetail({ params }: Params) {
   return (
     <article>
       <section className="container-x pt-20 pb-10">
-        <Link href="/services" className="text-sm text-muted hover:text-fg">
-          ← All services
+        <Link href="/services" className="text-sm text-muted hover:text-fg inline-flex items-center gap-1.5">
+          <Icon name="arrow-left" size={15} /> All services
         </Link>
         <div className="mt-6 flex items-center gap-4">
-          <span className="text-4xl">{service.icon || "✦"}</span>
+          <span className="icon-badge h-14 w-14">
+            <Icon name={service.icon} size={28} />
+          </span>
           <h1 className="title-xl">{service.title}</h1>
         </div>
         {service.summary ? <p className="lead mt-6 max-w-2xl">{service.summary}</p> : null}

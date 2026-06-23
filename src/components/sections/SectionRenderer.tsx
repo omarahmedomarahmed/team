@@ -19,6 +19,7 @@ import type {
   RichTextData,
   LogosData,
 } from "@/lib/types";
+import { SectionShell, type SectionBg } from "./SectionShell";
 
 import { Hero } from "./Hero";
 import { Stats } from "./Stats";
@@ -35,23 +36,18 @@ import { Contact } from "./Contact";
 import { RichText } from "./RichText";
 import { Logos } from "./Logos";
 
-type SectionLike = {
+type SectionLike = SectionBg & {
   id: string;
   type: string;
   data: unknown;
 };
 
-/**
- * Turns a Section row into the right React block. Collection-backed sections
- * (services, portfolio, team…) load their data here and are hidden when their
- * module feature flag is off — the templating mechanism in action.
- */
-export async function SectionRenderer({ section }: { section: SectionLike }) {
+async function renderInner(section: SectionLike) {
   const data = (section.data ?? {}) as Record<string, unknown>;
 
   switch (section.type) {
     case "HERO":
-      return <Hero data={data as unknown as HeroData} />;
+      return <Hero data={data as unknown as HeroData} hasBg={Boolean(section.bgVideoUrl || section.bgImageUrl)} />;
     case "STATS":
       return <Stats data={data as unknown as StatsData} />;
     case "ABOUT":
@@ -68,49 +64,46 @@ export async function SectionRenderer({ section }: { section: SectionLike }) {
     case "SERVICES": {
       if (!(await isModuleEnabled("services"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const services = await getServices(d.limit);
-      return <Services data={d} services={services} />;
+      return <Services data={d} services={await getServices(d.limit)} />;
     }
     case "PORTFOLIO": {
       if (!(await isModuleEnabled("portfolio"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const projects = await getProjects(d.limit);
-      return <Portfolio data={d} projects={projects} />;
+      return <Portfolio data={d} projects={await getProjects(d.limit)} />;
     }
     case "TEAM": {
       if (!(await isModuleEnabled("team"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const team = await getTeam();
-      return <Team data={d} team={team} />;
+      return <Team data={d} team={await getTeam()} />;
     }
     case "TESTIMONIALS": {
       if (!(await isModuleEnabled("testimonials"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const items = await getTestimonials(d.limit);
-      return <Testimonials data={d} items={items} />;
+      return <Testimonials data={d} items={await getTestimonials(d.limit)} />;
     }
     case "INDUSTRIES": {
       if (!(await isModuleEnabled("industries"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const items = await getIndustries();
-      return <Industries data={d} items={items} />;
+      return <Industries data={d} items={await getIndustries()} />;
     }
     case "FAQ": {
       if (!(await isModuleEnabled("faq"))) return null;
       const d = data as unknown as CollectionSectionData;
-      const items = await getFaqs();
-      return <Faq data={d} items={items} />;
+      return <Faq data={d} items={await getFaqs()} />;
     }
-    case "CONTACT": {
-      const settings = await getSettings();
-      return <Contact data={data as unknown as ContactData} settings={settings} />;
-    }
+    case "CONTACT":
+      return <Contact data={data as unknown as ContactData} settings={await getSettings()} />;
     default:
       return null;
   }
 }
 
-/** Renders an ordered list of sections (already filtered to enabled). */
+export async function SectionRenderer({ section }: { section: SectionLike }) {
+  const inner = await renderInner(section);
+  if (inner === null) return null;
+  return <SectionShell bg={section}>{inner}</SectionShell>;
+}
+
 export async function SectionList({ sections }: { sections: SectionLike[] }) {
   return (
     <>

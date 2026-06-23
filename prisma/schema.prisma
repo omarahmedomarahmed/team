@@ -159,16 +159,21 @@ model Page {
 /// A configurable block on a page. `data` holds content, `style` holds
 /// presentation — both JSON so any section can evolve without a migration.
 model Section {
-  id        String      @id @default(cuid())
-  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId    String
-  type      SectionType
-  order     Int         @default(0)
-  enabled   Boolean     @default(true)
-  data      Json        @default("{}")
-  style     Json        @default("{}")
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id          String      @id @default(cuid())
+  page        Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId      String
+  type        SectionType
+  order       Int         @default(0)
+  enabled     Boolean     @default(true)
+  // Per-section background (image or video) — editable in God Mode.
+  bgImageUrl  String?
+  bgVideoUrl  String?
+  bgPosterUrl String?
+  bgOverlay   Int         @default(72) // overlay darkness %, keeps text readable
+  data        Json        @default("{}")
+  style       Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([pageId, order])
 }
