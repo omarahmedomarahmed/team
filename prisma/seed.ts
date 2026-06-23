@@ -92,6 +92,22 @@ async function main() {
       mainMarket: "Information Technology",
       subMarket: "Digital Advertising",
       serviceAreas: ["ALL"],
+      contactConfig: {
+        fields: [
+          { name: "name", label: "Your name", type: "text", required: true },
+          { name: "email", label: "Email", type: "email", required: true },
+          { name: "phone", label: "Phone", type: "tel", required: false },
+          { name: "company", label: "Company", type: "text", required: false },
+          {
+            name: "service",
+            label: "Service interested in",
+            type: "select",
+            required: false,
+            options: ["Branding", "Website", "SEO & GEO", "Paid Ads", "Content", "Not sure yet"],
+          },
+          { name: "message", label: "Tell us about your business…", type: "textarea", required: true },
+        ],
+      },
       socials: [
         { platform: "Instagram", url: "#" },
         { platform: "LinkedIn", url: "#" },

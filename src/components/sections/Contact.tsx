@@ -5,6 +5,8 @@ import { Icon } from "@/components/ui/Icon";
 import { Reveal } from "@/components/motion/Reveal";
 
 export function Contact({ data, settings }: { data: ContactData; settings: Settings }) {
+  const cc = settings.contactConfig as { fields?: { name: string; label: string; type: string; required?: boolean; options?: string[] }[] } | undefined;
+  const fields = cc && Array.isArray(cc.fields) && cc.fields.length ? cc.fields : undefined;
   return (
     <section className="container-x section-pad">
       <div className="grid gap-12 md:grid-cols-2 md:items-start">
@@ -42,7 +44,7 @@ export function Contact({ data, settings }: { data: ContactData; settings: Setti
 
         {data.showForm === false ? null : (
           <Reveal delay={0.12}>
-            <ContactForm />
+            <ContactForm fields={fields} />
           </Reveal>
         )}
       </div>

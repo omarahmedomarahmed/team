@@ -25,11 +25,18 @@ export default async function ResourceList({ params }: { params: Promise<{ resou
             {rows.length} item{rows.length === 1 ? "" : "s"}
           </p>
         </div>
-        {!resource.noCreate ? (
-          <Link href={`/god/${key}/new`} className="btn btn-primary">
-            New {resource.singular.toLowerCase()}
-          </Link>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {key === "posts" ? (
+            <Link href="/god/ai-blog" className="btn btn-ghost">
+              Generate with AI
+            </Link>
+          ) : null}
+          {!resource.noCreate ? (
+            <Link href={`/god/${key}/new`} className="btn btn-primary">
+              New {resource.singular.toLowerCase()}
+            </Link>
+          ) : null}
+        </div>
       </div>
       <ResourceTable resource={resource} rows={rows} />
     </div>

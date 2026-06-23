@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getResource, type Field } from "@/lib/god/resources";
 import { getSectionFields } from "@/lib/god/sectionFields";
+import { generateBlogPost, type GeneratedPost } from "@/lib/ai";
 import {
   getCurrentUser,
   verifyCredentials,
@@ -186,6 +187,14 @@ export async function saveSettingsAction(formData: FormData) {
       .split(",")
       .map((x) => x.trim())
       .filter(Boolean),
+    contactConfig: (() => {
+      try {
+        const fields = JSON.parse(String(formData.get("contactFields") || "[]"));
+        return { fields: Array.isArray(fields) ? fields : [] };
+      } catch {
+        return { fields: [] };
+      }
+    })(),
     metaTitle: get("metaTitle"),
     metaDescription: get("metaDescription"),
     ogImageUrl: get("ogImageUrl"),
@@ -311,4 +320,41 @@ export async function deleteSectionAction(formData: FormData) {
   await prisma.section.delete({ where: { id } });
   revalidatePath("/", "layout");
   redirect(`/god/pages/${pageId}`);
+}
+
+// ------------------------------ AI Blog ------------------------------------
+
+export async function generatePostAction(formData: FormData) {
+  const user = await requireUser();
+  const topic = String(formData.get("topic") || "").trim();
+  if (!topic) redirect("/god/ai-blog?err=" + encodeURIComponent("Please enter a topic."));
+
+  let generated: GeneratedPost;
+  try {
+    generated = await generateBlogPost({
+      topic,
+      keywords: String(formData.get("keywords") || ""),
+      tone: String(formData.get("tone") || ""),
+      length: String(formData.get("length") || ""),
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Generation failed.";
+    redirect("/god/ai-blog?err=" + encodeURIComponent(msg));
+  }
+
+  const slug = `${slugify(generated.title) || "post"}-${Date.now().toString(36).slice(-4)}`;
+  const post = await prisma.post.create({
+    data: {
+      title: generated.title,
+      slug,
+      excerpt: generated.excerpt,
+      body: generated.body,
+      tags: generated.tags,
+      aiGenerated: true,
+      status: "DRAFT",
+    },
+  });
+  await logActivity(user.id, "ai_generate", "post", post.id);
+  revalidatePath("/god/posts");
+  redirect(`/god/posts/${post.id}`);
 }

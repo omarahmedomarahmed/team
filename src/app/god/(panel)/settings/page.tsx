@@ -4,6 +4,7 @@ import { saveSettingsAction } from "@/lib/god/actions";
 import { ColorField } from "@/components/god/ColorField";
 import { ImageUpload } from "@/components/god/ImageUpload";
 import { ServiceAreas } from "@/components/god/ServiceAreas";
+import { ContactFields } from "@/components/god/ContactFields";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     ? (s.socials as any[]).map((x) => `${x.platform} | ${x.url}`).join("\n")
     : "";
   const serviceAreas: string[] = Array.isArray(s?.serviceAreas) ? s.serviceAreas : [];
+  const cc: any = s?.contactConfig;
+  const contactFields =
+    cc && typeof cc === "object" && Array.isArray(cc.fields)
+      ? cc.fields.map((f: any) => ({
+          label: f.label,
+          type: f.type,
+          required: !!f.required,
+          options: Array.isArray(f.options) ? f.options.join(", ") : "",
+        }))
+      : [];
 
   return (
     <form action={saveSettingsAction} className="space-y-8 max-w-3xl">
@@ -94,6 +105,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <p className="text-xs text-muted mt-1.5">One per line:  Platform | https://url</p>
           </div>
         </div>
+      </section>
+
+      <section className="card p-6 space-y-5">
+        <h2 className="font-semibold">Contact form</h2>
+        <p className="text-xs text-muted -mt-3">Add, remove, and configure the fields on your contact form.</p>
+        <ContactFields value={contactFields} />
       </section>
 
       <section className="card p-6 space-y-5">

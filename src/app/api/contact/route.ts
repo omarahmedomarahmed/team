@@ -12,8 +12,8 @@ export async function POST(req: Request) {
     if (body.website) return NextResponse.json({ ok: true });
 
     const { name, email, phone, company, message } = body;
-    if (!email || !message) {
-      return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ ok: false, error: "Email is required" }, { status: 400 });
     }
 
     await prisma.lead.create({
@@ -22,9 +22,9 @@ export async function POST(req: Request) {
         email,
         phone: phone || null,
         company: company || null,
-        message,
+        message: message || null,
         source: "contact_form",
-        payload: body,
+        payload: body, // captures all fields, including custom ones
       },
     });
 
