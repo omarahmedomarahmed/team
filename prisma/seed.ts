@@ -33,6 +33,14 @@ async function reset() {
 }
 
 async function main() {
+  // Idempotent: skip if already initialized so redeploys never wipe edits.
+  // Force a full re-seed with SEED_FORCE=1.
+  const existing = await prisma.siteSettings.count();
+  if (existing > 0 && !process.env.SEED_FORCE) {
+    console.log("✓ Database already initialized — skipping seed.");
+    return;
+  }
+
   await reset();
 
   // ----------------------------- Settings --------------------------------

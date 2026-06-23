@@ -12,8 +12,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Used by `prisma db push` during deploy (Neon's direct, non-pooled URL).
+  // You may set DIRECT_URL to the same value as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 // ----------------------------- Enums ----------------------------------------
