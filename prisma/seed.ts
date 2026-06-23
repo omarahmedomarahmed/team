@@ -44,6 +44,18 @@ async function reset() {
   await prisma.post.deleteMany();
 }
 
+// Fill newly-added fields on existing installs without wiping content.
+async function patchDefaults(current: any) {
+  const patch: any = {};
+  if (!current.mainMarket) patch.mainMarket = "Information Technology";
+  if (!current.subMarket) patch.subMarket = "Digital Advertising";
+  const areas = current.serviceAreas;
+  if (!areas || (Array.isArray(areas) && areas.length === 0)) patch.serviceAreas = ["ALL"];
+  if (Object.keys(patch).length) {
+    await prisma.siteSettings.update({ where: { id: current.id }, data: patch });
+  }
+}
+
 async function main() {
   // Re-seed only when SEED_VERSION changes (rolls out new seed content once on
   // deploy) or when SEED_FORCE=1. Otherwise skip, preserving any edits.
@@ -53,6 +65,7 @@ async function main() {
       ? (current.extra as Record<string, unknown>).seedVersion
       : null;
   if (current && storedVersion === SEED_VERSION && !process.env.SEED_FORCE) {
+    await patchDefaults(current);
     console.log(`Seed up to date (v${SEED_VERSION}) — skipping.`);
     return;
   }
@@ -76,6 +89,9 @@ async function main() {
       email: "hello@youragency.com",
       phone: "+1 (555) 012-3456",
       address: "Remote-first · Working worldwide",
+      mainMarket: "Information Technology",
+      subMarket: "Digital Advertising",
+      serviceAreas: ["ALL"],
       socials: [
         { platform: "Instagram", url: "#" },
         { platform: "LinkedIn", url: "#" },
@@ -219,7 +235,20 @@ async function main() {
     },
   ];
   await prisma.service.createMany({
-    data: services.map((s, i) => ({ ...s, order: i, featured: i < 6 })),
+    data: services.map((s, i) => ({
+      ...s,
+      order: i,
+      featured: i < 6,
+      tagline: s.summary,
+      heroImageUrl: PICSUM(`svc-hero-${s.slug}`, 1600, 900),
+      benefits: [
+        { title: "Senior expertise", description: "Work directly with specialists — never juniors." },
+        { title: "Full ownership", description: "Everything we build is yours to keep and control." },
+        { title: "Built to convert", description: "Designed around your goals, not vanity metrics." },
+      ],
+      ctaTitle: `Ready to get started with ${s.title.toLowerCase()}?`,
+      ctaText: "Tell us about your business and we'll map out the fastest path forward.",
+    })),
   });
 
   // ----------------------------- Team ------------------------------------

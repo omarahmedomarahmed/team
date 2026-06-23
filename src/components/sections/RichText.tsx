@@ -1,7 +1,7 @@
 import type { RichTextData } from "@/lib/types";
 
 export function RichText({ data }: { data: RichTextData }) {
-  const paragraphs = data.body.split(/\n\s*\n/).filter(Boolean);
+  const paragraphs = (data.body || "").split(/\n\s*\n/).filter(Boolean);
   return (
     <section className="container-x section-pad">
       <div className="max-w-3xl">

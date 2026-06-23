@@ -4,7 +4,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { getResource, type Resource } from "@/lib/god/resources";
+import { getResource, type Field } from "@/lib/god/resources";
+import { getSectionFields } from "@/lib/god/sectionFields";
 import {
   getCurrentUser,
   verifyCredentials,
@@ -28,34 +29,44 @@ function slugify(s: string) {
     .slice(0, 80);
 }
 
-function coerce(resource: Resource, formData: FormData): Record<string, any> {
+function coerceFields(fields: Field[], formData: FormData): Record<string, any> {
   const data: Record<string, any> = {};
-  for (const f of resource.fields) {
+  for (const f of fields) {
     const raw = formData.get(f.name);
     switch (f.type) {
       case "boolean":
         data[f.name] = raw != null;
         break;
+      case "link": {
+        const label = String(formData.get(`${f.name}__label`) ?? "").trim();
+        const href = String(formData.get(`${f.name}__href`) ?? "").trim();
+        if (label || href) data[f.name] = { label, href: href || "#" };
+        break;
+      }
       case "number": {
         const v = (raw ?? "").toString().trim();
         if (v !== "") data[f.name] = Number(v);
         break;
       }
-      case "list": {
+      case "list":
+      case "images": {
         const v = (raw ?? "").toString();
         data[f.name] = v.split("\n").map((s) => s.trim()).filter(Boolean);
         break;
       }
-      case "json": {
-        const v = (raw ?? "").toString().trim();
-        if (v === "") data[f.name] = [];
-        else {
-          try {
-            data[f.name] = JSON.parse(v);
-          } catch {
-            /* ignore malformed JSON rather than crash the save */
-          }
-        }
+      case "pairs": {
+        const [k0, k1] = f.pairKeys ?? ["a", "b"];
+        const v = (raw ?? "").toString();
+        data[f.name] = v
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const idx = line.indexOf("|");
+            const a = (idx === -1 ? line : line.slice(0, idx)).trim();
+            const b = (idx === -1 ? "" : line.slice(idx + 1)).trim();
+            return { [k0]: a, [k1]: b };
+          });
         break;
       }
       default: {
@@ -74,7 +85,7 @@ export async function saveResourceAction(formData: FormData) {
   const resource = getResource(key);
   if (!resource || resource.readOnly) redirect("/god");
 
-  const data = coerce(resource!, formData);
+  const data = coerceFields(resource!.fields, formData);
 
   // Auto-slug from title/name when left blank.
   if (resource!.fields.some((f) => f.name === "slug") && !data.slug) {
@@ -169,6 +180,12 @@ export async function saveSettingsAction(formData: FormData) {
     phone: get("phone"),
     address: get("address"),
     socials,
+    mainMarket: get("mainMarket"),
+    subMarket: get("subMarket"),
+    serviceAreas: String(formData.get("serviceAreas") || "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean),
     metaTitle: get("metaTitle"),
     metaDescription: get("metaDescription"),
     ogImageUrl: get("ogImageUrl"),
@@ -266,15 +283,10 @@ export async function saveSectionAction(formData: FormData) {
   const id = String(formData.get("__id"));
   const pageId = String(formData.get("pageId"));
 
-  let parsed: any = {};
-  const raw = String(formData.get("data") || "").trim();
-  if (raw) {
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      redirect(`/god/pages/${pageId}?err=json&s=${id}`);
-    }
-  }
+  const section = await prisma.section.findUnique({ where: { id } });
+  if (!section) redirect(`/god/pages/${pageId}`);
+
+  const data = coerceFields(getSectionFields(section!.type), formData);
 
   await prisma.section.update({
     where: { id },
@@ -285,7 +297,7 @@ export async function saveSectionAction(formData: FormData) {
       bgVideoUrl: emptyNull(formData.get("bgVideoUrl")),
       bgPosterUrl: emptyNull(formData.get("bgPosterUrl")),
       bgOverlay: Number(formData.get("bgOverlay") || 72),
-      data: parsed,
+      data,
     },
   });
   revalidatePath("/", "layout");

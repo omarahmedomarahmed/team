@@ -2,7 +2,7 @@ import type { AboutData } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
 
 export function About({ data }: { data: AboutData }) {
-  const paragraphs = data.body.split(/\n\s*\n/).filter(Boolean);
+  const paragraphs = (data.body || "").split(/\n\s*\n/).filter(Boolean);
   return (
     <section className="container-x section-pad">
       <div className="grid gap-12 md:grid-cols-2 md:items-start">

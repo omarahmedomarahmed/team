@@ -8,10 +8,12 @@ export type FieldType =
   | "boolean"
   | "select"
   | "status"
-  | "image"
+  | "image" // single upload
+  | "images" // multiple uploads -> string[]
   | "icon"
   | "list" // newline-separated -> string[]
-  | "json"; // JSON textarea
+  | "pairs" // "A | B" per line -> [{ [k0]: A, [k1]: B }]
+  | "link"; // { label, href }
 
 export type Field = {
   name: string;
@@ -20,6 +22,7 @@ export type Field = {
   help?: string;
   full?: boolean; // span both columns
   options?: { value: string; label: string }[];
+  pairKeys?: [string, string]; // for type "pairs"
 };
 
 export type Resource = {
@@ -56,11 +59,25 @@ export const RESOURCES: Record<string, Resource> = {
     ],
     fields: [
       { name: "title", label: "Title", type: "text" },
-      { name: "slug", label: "Slug", type: "text", help: "Leave blank to auto-generate from title." },
+      { name: "slug", label: "Slug", type: "text", help: "Leave blank to auto-generate." },
       { name: "icon", label: "Icon", type: "icon" },
-      { name: "summary", label: "Summary", type: "textarea", full: true },
+      { name: "tagline", label: "Tagline", type: "text", full: true, help: "Short line under the title on the service page." },
+      { name: "summary", label: "Summary (shown on the services grid)", type: "textarea", full: true },
       { name: "description", label: "Description", type: "textarea", full: true, help: "Blank line = new paragraph." },
-      { name: "imageUrl", label: "Image URL", type: "image" },
+      { name: "heroImageUrl", label: "Hero image", type: "image", full: true },
+      {
+        name: "benefits",
+        label: "What's included",
+        type: "pairs",
+        full: true,
+        pairKeys: ["title", "description"],
+        help: "One per line:  Title | Description",
+      },
+      { name: "gallery", label: "Example images", type: "images", full: true },
+      { name: "price", label: "Price", type: "text", help: "Leave blank to hide pricing." },
+      { name: "priceNote", label: "Price note", type: "text", help: "e.g. starting at  ·  /month" },
+      { name: "ctaTitle", label: "Call-to-action heading", type: "text", full: true },
+      { name: "ctaText", label: "Call-to-action text", type: "textarea", full: true },
       { name: "featured", label: "Featured", type: "boolean" },
       { name: "order", label: "Order", type: "number" },
       STATUS,
@@ -109,10 +126,17 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "url", label: "External URL", type: "text" },
       { name: "summary", label: "Summary", type: "textarea", full: true },
       { name: "description", label: "Description", type: "textarea", full: true },
-      { name: "coverUrl", label: "Cover image URL", type: "image", full: true },
-      { name: "gallery", label: "Gallery image URLs", type: "list", full: true, help: "One image URL per line." },
-      { name: "services", label: "Service tags", type: "list", full: true, help: "One tag per line." },
-      { name: "results", label: "Results", type: "json", full: true, help: '[{"label":"Leads","value":"+180%"}]' },
+      { name: "coverUrl", label: "Cover image", type: "image", full: true },
+      { name: "gallery", label: "Gallery images", type: "images", full: true },
+      { name: "services", label: "Service tags", type: "list", full: true, help: "One tag per line — matches the service name to show this project on that service's page." },
+      {
+        name: "results",
+        label: "Results",
+        type: "pairs",
+        full: true,
+        pairKeys: ["label", "value"],
+        help: "One per line:  Leads | +180%",
+      },
       { name: "featured", label: "Featured", type: "boolean" },
       { name: "order", label: "Order", type: "number" },
       STATUS,

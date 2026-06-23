@@ -15,7 +15,7 @@ export function Process({ data }: { data: ProcessData }) {
       </Reveal>
 
       <Stagger className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {data.steps.map((step, i) => (
+        {(data.steps || []).map((step, i) => (
           <StaggerItem key={step.title} className="h-full">
             <div className="card card-hover p-6 h-full group">
               <div className="text-sm font-mono text-brand transition-transform duration-300 group-hover:-translate-y-0.5">

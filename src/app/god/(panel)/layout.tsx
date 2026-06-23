@@ -3,23 +3,38 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { logoutAction } from "@/lib/god/actions";
 import { NavLinks, type NavItem } from "@/components/god/NavLinks";
-import { RESOURCE_LIST } from "@/lib/god/resources";
+import { RESOURCES } from "@/lib/god/resources";
 import { Icon } from "@/components/ui/Icon";
 
-const TOP: NavItem[] = [
-  { href: "/god", label: "Dashboard", icon: "bar-chart" },
-  { href: "/god/pages", label: "Pages", icon: "monitor" },
+const DASHBOARD: NavItem[] = [{ href: "/god", label: "Dashboard", icon: "bar-chart" }];
+
+const WEBSITE: NavItem[] = [
+  { href: "/god/pages", label: "Pages & sections", icon: "monitor" },
+  { href: "/god/navigation", label: "Menu links", icon: "workflow" },
+  { href: "/god/settings", label: "Brand & settings", icon: "settings" },
 ];
-const BOTTOM: NavItem[] = [
-  { href: "/god/modules", label: "Modules", icon: "zap" },
-  { href: "/god/settings", label: "Settings", icon: "settings" },
+
+const CONTENT_KEYS = ["services", "projects", "team", "testimonials", "industries", "faqs", "posts"];
+
+const BUSINESS: NavItem[] = [
+  { href: "/god/leads", label: "Leads", icon: "mail" },
+  { href: "/god/modules", label: "Features on/off", icon: "zap" },
 ];
+
+function Group({ title, items }: { title?: string; items: NavItem[] }) {
+  return (
+    <div>
+      {title ? <p className="px-3 text-[0.7rem] uppercase tracking-wider text-muted mb-2">{title}</p> : null}
+      <NavLinks items={items} />
+    </div>
+  );
+}
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/god/login");
 
-  const resourceNav: NavItem[] = RESOURCE_LIST.map((r) => ({
+  const content: NavItem[] = CONTENT_KEYS.map((k) => RESOURCES[k]).filter(Boolean).map((r) => ({
     href: `/god/${r.key}`,
     label: r.label,
     icon: r.icon,
@@ -34,15 +49,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </Link>
 
         <div className="flex-1 space-y-6">
-          <NavLinks items={TOP} />
-          <div>
-            <p className="px-3 text-[0.7rem] uppercase tracking-wider text-muted mb-2">Content</p>
-            <NavLinks items={resourceNav} />
-          </div>
-          <div>
-            <p className="px-3 text-[0.7rem] uppercase tracking-wider text-muted mb-2">Configure</p>
-            <NavLinks items={BOTTOM} />
-          </div>
+          <Group items={DASHBOARD} />
+          <Group title="Your website" items={WEBSITE} />
+          <Group title="Content" items={content} />
+          <Group title="Business" items={BUSINESS} />
         </div>
 
         <div className="border-t border-line pt-4">
@@ -59,7 +69,6 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       </aside>
 
       <div className="min-w-0">
-        {/* Mobile top bar */}
         <div className="md:hidden flex items-center justify-between border-b border-line p-4">
           <Link href="/god" className="font-semibold">God Mode</Link>
           <form action={logoutAction}>

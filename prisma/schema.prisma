@@ -93,6 +93,14 @@ model SiteSettings {
   address String?
   socials Json    @default("[]") // [{ platform, url }]
 
+  // Market positioning (per client)
+  mainMarket   String?
+  subMarket    String?
+  serviceAreas Json    @default("[]") // ["ALL"] or ["CA","TX",...]
+
+  // Contact form configuration (no-code form builder)
+  contactConfig Json @default("{}")
+
   // SEO defaults
   metaTitle       String?
   metaDescription String?
@@ -191,6 +199,15 @@ model Service {
   featured        Boolean       @default(false)
   order           Int           @default(0)
   status          PublishStatus @default(PUBLISHED)
+  // Landing-page fields (each service detail is its own landing page)
+  tagline         String?
+  heroImageUrl    String?
+  benefits        Json          @default("[]") // [{ title, description }]
+  gallery         Json          @default("[]") // image URLs
+  price           String?
+  priceNote       String?
+  ctaTitle        String?
+  ctaText         String?
   metaTitle       String?
   metaDescription String?
   createdAt       DateTime      @default(now())
@@ -286,7 +303,8 @@ model Post {
 
 model MediaAsset {
   id        String   @id @default(cuid())
-  url       String
+  url       String? // public URL; for uploads this is /api/media/{id}
+  data      Bytes? // uploaded file bytes (stored in the database)
   filename  String
   mimeType  String?
   size      Int?

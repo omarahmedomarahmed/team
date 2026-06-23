@@ -10,6 +10,9 @@ import {
   saveSectionAction,
   deleteSectionAction,
 } from "@/lib/god/actions";
+import { getSectionFields, SECTION_LABELS } from "@/lib/god/sectionFields";
+import { FieldInput } from "@/components/god/FieldInput";
+import { ImageUpload } from "@/components/god/ImageUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -30,15 +33,8 @@ function Check({ name, label, checked }: { name: string; label: string; checked?
   );
 }
 
-export default async function PageEditor({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ err?: string }>;
-}) {
+export default async function PageEditor({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const sp = await searchParams;
   const isNew = id === "new";
 
   const page: any = isNew
@@ -111,15 +107,13 @@ export default async function PageEditor({
       {!isNew ? (
         <div className="space-y-4">
           <h2 className="font-semibold">Sections</h2>
-          {sp.err === "json" ? (
-            <p className="text-sm text-red-400">A section&apos;s content wasn&apos;t valid JSON — please fix and save again.</p>
-          ) : null}
+          <p className="text-sm text-muted -mt-2">Click a section to edit its text and images. Drag isn&apos;t needed — set the order number.</p>
 
           {page.sections.map((s: any) => (
             <details key={s.id} className="card overflow-hidden group">
               <summary className="list-none cursor-pointer px-5 py-4 flex items-center gap-3 [&::-webkit-details-marker]:hidden">
                 <Icon name="plus" size={16} className="text-brand transition-transform group-open:rotate-45" />
-                <span className="font-medium text-sm">{s.type}</span>
+                <span className="font-medium text-sm">{SECTION_LABELS[s.type] || s.type}</span>
                 {!s.enabled ? <span className="chip text-[0.65rem] py-0 px-2">hidden</span> : null}
                 <span className="ml-auto text-xs text-muted">order {s.order}</span>
               </summary>
@@ -133,20 +127,34 @@ export default async function PageEditor({
                       Order <input type="number" name="order" defaultValue={s.order} className={`${inputCls} w-20`} />
                     </div>
                   </div>
+                  {/* Section content — plain text fields */}
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <div><label className="block text-xs text-muted mb-1">Background image URL</label>
-                      <input name="bgImageUrl" defaultValue={s.bgImageUrl ?? ""} className={inputCls} /></div>
-                    <div><label className="block text-xs text-muted mb-1">Background video URL</label>
-                      <input name="bgVideoUrl" defaultValue={s.bgVideoUrl ?? ""} className={inputCls} /></div>
-                    <div><label className="block text-xs text-muted mb-1">Video poster URL</label>
-                      <input name="bgPosterUrl" defaultValue={s.bgPosterUrl ?? ""} className={inputCls} /></div>
-                    <div><label className="block text-xs text-muted mb-1">Overlay darkness (0–100)</label>
-                      <input type="number" name="bgOverlay" defaultValue={s.bgOverlay ?? 72} className={inputCls} /></div>
+                    {getSectionFields(s.type).map((f) => (
+                      <div key={f.name} className={f.full ? "sm:col-span-2" : ""}>
+                        <label className="block text-xs text-muted mb-1">{f.label}</label>
+                        <FieldInput field={f} value={(s.data as any)?.[f.name]} />
+                        {f.help ? <p className="text-[0.7rem] text-muted mt-1">{f.help}</p> : null}
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <label className="block text-xs text-muted mb-1">Content (JSON)</label>
-                    <textarea name="data" rows={8} defaultValue={JSON.stringify(s.data ?? {}, null, 2)} className={`${inputCls} font-mono text-xs`} />
-                  </div>
+
+                  {/* Background */}
+                  <details className="rounded-lg border border-line">
+                    <summary className="cursor-pointer px-3 py-2 text-xs text-muted [&::-webkit-details-marker]:hidden">
+                      Background &amp; spacing
+                    </summary>
+                    <div className="p-3 grid sm:grid-cols-2 gap-4 border-t border-line">
+                      <div><label className="block text-xs text-muted mb-1">Background image</label>
+                        <ImageUpload name="bgImageUrl" value={s.bgImageUrl} /></div>
+                      <div><label className="block text-xs text-muted mb-1">Video poster image</label>
+                        <ImageUpload name="bgPosterUrl" value={s.bgPosterUrl} /></div>
+                      <div><label className="block text-xs text-muted mb-1">Background video URL</label>
+                        <input name="bgVideoUrl" defaultValue={s.bgVideoUrl ?? ""} placeholder="https://…mp4" className={inputCls} /></div>
+                      <div><label className="block text-xs text-muted mb-1">Overlay darkness (0–100)</label>
+                        <input type="number" name="bgOverlay" defaultValue={s.bgOverlay ?? 72} className={inputCls} /></div>
+                    </div>
+                  </details>
+
                   <div className="flex items-center gap-3">
                     <button type="submit" className="btn btn-primary">Save section</button>
                   </div>
@@ -166,7 +174,7 @@ export default async function PageEditor({
             <span className="text-sm font-medium">Add section:</span>
             <select name="type" className={`${inputCls} max-w-xs`} defaultValue="RICH_TEXT">
               {SECTION_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>{SECTION_LABELS[t] || t}</option>
               ))}
             </select>
             <button type="submit" className="btn btn-ghost">Add</button>
