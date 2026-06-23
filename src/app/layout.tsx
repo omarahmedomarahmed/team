@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/site";
-import { SiteHeader } from "@/components/site/Header";
-import { SiteFooter } from "@/components/site/Footer";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -33,7 +31,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const s = await getSettings();
 
-  // Brand tokens from the database override the CSS defaults.
+  // Brand tokens from the database override the CSS defaults (site + admin).
   const brandVars = {
     "--bg": s.bgColor,
     "--fg": s.fgColor,
@@ -47,22 +45,7 @@ export default async function RootLayout({
       style={brandVars}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
-        {s.gaId ? (
-          <>
-            {/* eslint-disable-next-line @next/next/next-script-for-ga */}
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${s.gaId}`} />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${s.gaId}');`,
-              }}
-            />
-          </>
-        ) : null}
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }
