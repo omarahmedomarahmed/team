@@ -6,6 +6,7 @@ import {
   getIndustries,
   getFaqs,
   getSettings,
+  getTimelineYears,
   isModuleEnabled,
 } from "@/lib/site";
 import type {
@@ -18,10 +19,14 @@ import type {
   ContactData,
   RichTextData,
   LogosData,
+  PortraitHeroData,
+  TimelineData,
 } from "@/lib/types";
 import { SectionShell, type SectionBg } from "./SectionShell";
 
 import { Hero } from "./Hero";
+import { PortraitHero } from "./PortraitHero";
+import { Timeline } from "./Timeline";
 import { Stats } from "./Stats";
 import { About } from "./About";
 import { Services } from "./Services";
@@ -48,6 +53,10 @@ async function renderInner(section: SectionLike) {
   switch (section.type) {
     case "HERO":
       return <Hero data={data as unknown as HeroData} hasBg={Boolean(section.bgVideoUrl || section.bgImageUrl)} />;
+    case "PORTRAIT_HERO":
+      return <PortraitHero data={data as unknown as PortraitHeroData} />;
+    case "TIMELINE":
+      return <Timeline data={data as unknown as TimelineData} years={await getTimelineYears()} />;
     case "STATS":
       return <Stats data={data as unknown as StatsData} />;
     case "ABOUT":

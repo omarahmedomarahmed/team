@@ -10,8 +10,8 @@ export type SectionBg = {
 
 /**
  * Wraps a section with an optional background (image or muted autoplay video)
- * plus a readability overlay and brand glow. Video uses a poster for instant,
- * seamless paint while it loads. No background = no wrapper overhead.
+ * plus a warm light readability wash so dark (chocolate) text stays legible.
+ * Video uses a poster for instant paint. No background = no wrapper overhead.
  */
 export function SectionShell({
   bg,
@@ -49,22 +49,15 @@ export function SectionShell({
         />
       )}
 
-      {/* darken for legibility */}
+      {/* warm light wash for legibility (chocolate text on light) */}
       <div
         className="absolute inset-0 -z-10"
         style={{
-          background: `linear-gradient(180deg, rgba(8,7,17,${o}) 0%, rgba(8,7,17,${Math.min(
-            1,
-            o + 0.14,
-          )}) 100%)`,
-        }}
-      />
-      {/* brand glow */}
-      <div
-        className="absolute inset-0 -z-10 opacity-70"
-        style={{
-          background:
-            "radial-gradient(55rem 38rem at 82% -5%, color-mix(in oklab, var(--brand) 30%, transparent), transparent 60%)",
+          background: `linear-gradient(180deg, color-mix(in oklab, var(--bg) ${Math.round(
+            o * 100,
+          )}%, transparent) 0%, color-mix(in oklab, var(--bg) ${Math.round(
+            Math.min(1, o + 0.14) * 100,
+          )}%, transparent) 100%)`,
         }}
       />
       {children}

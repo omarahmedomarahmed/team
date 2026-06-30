@@ -67,7 +67,7 @@ export async function SiteFooter() {
         <p>
           © {year} {settings.legalName || settings.siteName}. All rights reserved.
         </p>
-        <p className="opacity-70">Built on the God Mode platform.</p>
+        <p className="opacity-70">Executive Portfolio · 2017 — 2026</p>
       </div>
     </footer>
   );

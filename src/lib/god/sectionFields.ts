@@ -5,7 +5,7 @@ import type { Field } from "@/lib/god/resources";
 const HEADING: Field[] = [
   { name: "eyebrow", label: "Eyebrow (small label above title)", type: "text", full: true },
   { name: "title", label: "Title", type: "text" },
-  { name: "highlight", label: "Highlighted word(s)", type: "text", help: "Shown in the brand gradient." },
+  { name: "highlight", label: "Highlighted word(s)", type: "text", help: "Shown in the accent color." },
   { name: "subtitle", label: "Subtitle", type: "textarea", full: true },
 ];
 
@@ -17,6 +17,8 @@ const COLLECTION: Field[] = [
 
 export const SECTION_LABELS: Record<string, string> = {
   HERO: "Hero",
+  PORTRAIT_HERO: "Portfolio hero",
+  TIMELINE: "Career timeline",
   STATS: "Stats",
   ABOUT: "About / text",
   SERVICES: "Services grid",
@@ -42,6 +44,21 @@ export const SECTION_FIELDS: Record<string, Field[]> = {
     { name: "primaryCta", label: "Main button", type: "link", full: true },
     { name: "secondaryCta", label: "Secondary button", type: "link", full: true },
     { name: "badges", label: "Badges", type: "list", full: true, help: "One per line." },
+  ],
+  PORTRAIT_HERO: [
+    { name: "eyebrow", label: "Eyebrow (small label)", type: "text", full: true, help: 'e.g. "Executive Portfolio"' },
+    { name: "name", label: "Name (large)", type: "text", full: true },
+    { name: "roles", label: "Roles line", type: "text", full: true, help: "Separate roles with  •" },
+    { name: "statement", label: "Supporting statement", type: "textarea", full: true },
+    { name: "periodLabel", label: "Period label", type: "text", help: 'e.g. "2017 — 2026"' },
+    { name: "portrait", label: "Portrait photo", type: "image", full: true },
+    { name: "primaryCta", label: "Main button", type: "link", full: true },
+    { name: "secondaryCta", label: "Secondary button", type: "link", full: true },
+  ],
+  TIMELINE: [
+    { name: "eyebrow", label: "Eyebrow", type: "text", full: true },
+    { name: "title", label: "Title", type: "text", full: true },
+    { name: "intro", label: "Intro line", type: "textarea", full: true, help: "Short line under the title." },
   ],
   STATS: [
     { name: "items", label: "Stats", type: "pairs", full: true, pairKeys: ["value", "label"], help: "One per line:  15+ | Years of experience" },

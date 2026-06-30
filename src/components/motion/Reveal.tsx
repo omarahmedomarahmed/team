@@ -1,11 +1,11 @@
 "use client";
 
-import { motion, type Variants } from "motion/react";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ReactNode } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/** Fade + slide a block into view on scroll. */
+/** Fade + slide a block into view on scroll. Static when reduced-motion is on. */
 export function Reveal({
   children,
   delay = 0,
@@ -17,6 +17,8 @@ export function Reveal({
   y?: number;
   className?: string;
 }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <div className={className}>{children}</div>;
   return (
     <motion.div
       className={className}
@@ -42,6 +44,8 @@ const itemVariants: Variants = {
 
 /** Container that staggers its <StaggerItem> children as they enter view. */
 export function Stagger({ children, className }: { children: ReactNode; className?: string }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <div className={className}>{children}</div>;
   return (
     <motion.div
       className={className}
@@ -56,6 +60,8 @@ export function Stagger({ children, className }: { children: ReactNode; classNam
 }
 
 export function StaggerItem({ children, className }: { children: ReactNode; className?: string }) {
+  const reduce = useReducedMotion();
+  if (reduce) return <div className={className}>{children}</div>;
   return (
     <motion.div className={className} variants={itemVariants}>
       {children}
