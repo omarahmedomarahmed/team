@@ -4,6 +4,7 @@ import type { CollectionSectionData } from "@/lib/types";
 import { SectionHeading } from "@/components/sections/SectionHeading";
 import { Icon } from "@/components/ui/Icon";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
+import { Placeholder } from "@/components/portfolio/Placeholder";
 
 type ProjectItem = {
   id: string;
@@ -11,6 +12,7 @@ type ProjectItem = {
   title: string;
   client: string | null;
   industry: string | null;
+  category: string | null;
   summary: string | null;
   coverUrl: string | null;
   services: unknown;
@@ -40,7 +42,7 @@ export function Portfolio({
           const tags = Array.isArray(p.services) ? (p.services as string[]) : [];
           return (
             <StaggerItem key={p.id}>
-              <Link href={`/work/${p.slug}`} className="card card-hover group overflow-hidden flex flex-col h-full">
+              <Link href={`/portfolio/${p.slug}`} className="card card-hover group overflow-hidden flex flex-col h-full">
                 <div className="relative aspect-[4/3] overflow-hidden border-b border-line">
                   {p.coverUrl ? (
                     <img
@@ -49,9 +51,7 @@ export function Portfolio({
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-brand/30 to-accent/20 flex items-center justify-center">
-                      <span className="text-3xl font-bold opacity-40">{p.title.slice(0, 2)}</span>
-                    </div>
+                    <Placeholder label={p.category || "Showcase"} />
                   )}
                   <span className="reveal-badge">
                     <Icon name="arrow-up-right" size={18} />
@@ -59,7 +59,7 @@ export function Portfolio({
                 </div>
                 <div className="p-4 sm:p-5 flex flex-col flex-1">
                   <div className="flex items-center gap-2 text-[0.7rem] text-muted">
-                    {p.industry ? <span>{p.industry}</span> : null}
+                    {p.category || p.industry ? <span>{p.category || p.industry}</span> : null}
                   </div>
                   <h3 className="mt-1 font-semibold leading-tight">{p.title}</h3>
                   {p.summary ? (

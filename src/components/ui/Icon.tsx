@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 // Curated, tree-shakeable icon set. Content stores a key (e.g. "target");
-// God Mode will offer this list. No emojis anywhere — ever.
+// Admin will offer this list. No emojis anywhere — ever.
 const MAP: Record<string, LucideIcon> = {
   // services
   target: Target,

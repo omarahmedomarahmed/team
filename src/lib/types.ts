@@ -1,5 +1,5 @@
 // Shared shapes for the JSON payloads stored on Section.data and elsewhere.
-// These are the contract between the seed/God Mode and the section renderer.
+// These are the contract between the seed/Admin and the section renderer.
 
 export type CTALink = { label: string; href: string };
 export type Social = { platform: string; url: string };
@@ -33,6 +33,8 @@ export interface CollectionSectionData {
   highlight?: string;
   subtitle?: string;
   limit?: number;
+  category?: string; // filter (portfolio work type)
+  featured?: boolean; // only featured items
 }
 
 export interface ProcessData {
@@ -66,8 +68,9 @@ export interface RichTextData {
 }
 
 export interface LogosData {
+  eyebrow?: string;
   title?: string;
-  items: string[];
+  subtitle?: string;
 }
 
 // --------------------------- Portfolio sections ----------------------------
@@ -79,6 +82,7 @@ export interface PortraitHeroData {
   statement?: string;
   periodLabel?: string; // "2017 — 2026"
   portrait?: string; // uploaded media URL (/api/media/{id})
+  bgImage?: string; // optional hero background image
   primaryCta?: CTALink;
   secondaryCta?: CTALink;
 }
@@ -87,4 +91,14 @@ export interface TimelineData {
   eyebrow?: string;
   title?: string;
   intro?: string;
+}
+
+export interface ExperienceIndexData {
+  eyebrow?: string;
+  title?: string;
+  highlight?: string;
+  subtitle?: string;
+  category?: string; // filter to a single category/department
+  groupByCategory?: boolean; // render grouped under category headings
+  limit?: number;
 }
