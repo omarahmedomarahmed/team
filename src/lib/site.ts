@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
   description: null as string | null,
   logoText: "Agency",
   logoUrl: null as string | null,
+  logoIcon: null as string | null,
   faviconUrl: null as string | null,
   foundedYear: null as number | null,
   primaryColor: "#6E4A6B",

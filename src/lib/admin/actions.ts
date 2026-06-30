@@ -171,6 +171,7 @@ export async function saveSettingsAction(formData: FormData) {
     description: get("description"),
     logoText: get("logoText"),
     logoUrl: get("logoUrl"),
+    logoIcon: get("logoIcon"),
     faviconUrl: get("faviconUrl"),
     foundedYear: foundedYear ? Number(foundedYear) : null,
     primaryColor: get("primaryColor") || "#6E4A6B",
