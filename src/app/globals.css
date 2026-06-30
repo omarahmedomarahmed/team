@@ -14,20 +14,26 @@
   --font-sans: var(--font-sans-stack);
 }
 
-/* Light editorial theme. Warm white, chocolate-brown text, olive-green accent.
-   Only --bg/--fg/--brand/--accent are overridden at runtime from SiteSettings;
-   the rest are fixed here. */
+/* Light editorial theme. The four BRAND tokens (--bg/--fg/--brand/--accent)
+   are overridden at runtime from SiteSettings (inline on <html>). Every other
+   color is DERIVED from them with color-mix, so the entire UI — section bands,
+   placeholders, chips, badges, borders, muted text, shadows — follows the
+   branding settings automatically (no hardcoded colors to fall out of sync). */
 :root {
-  --bg: #fbf9f4; /* warm white */
-  --bg-2: #eef1e6; /* very light sage */
-  --fg: #3e2c1c; /* rich chocolate brown */
-  --brand: #6e7b3d; /* olive green */
-  --accent: #98a86b; /* soft light green */
-  --muted: #7e6e5c; /* muted brown */
-  --line: #dcddc8; /* subtle olive border */
+  --bg: #fbf9f4; /* warm white — from branding */
+  --fg: #3e2c1c; /* text — from branding */
+  --brand: #6e7b3d; /* primary accent — from branding */
+  --accent: #98a86b; /* secondary accent — from branding */
+
+  /* Derived from the brand tokens above */
+  --bg-2: color-mix(in oklab, var(--accent) 14%, var(--bg)); /* tinted section/band/chip bg */
+  --muted: color-mix(in oklab, var(--fg) 58%, var(--bg)); /* secondary text */
+  --line: color-mix(in oklab, var(--fg) 14%, var(--bg)); /* subtle borders */
   --card: #ffffff; /* white cards */
+
   --radius: 0.75rem; /* single border-radius everywhere */
-  --shadow: 0 1px 2px rgba(62, 44, 28, 0.05), 0 10px 30px rgba(62, 44, 28, 0.06); /* one soft shadow */
+  --shadow: 0 1px 2px color-mix(in oklab, var(--fg) 8%, transparent),
+    0 10px 30px color-mix(in oklab, var(--fg) 9%, transparent); /* one soft shadow, tinted to the theme */
   --font-sans-stack: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
