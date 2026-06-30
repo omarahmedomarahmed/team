@@ -1,19 +1,32 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import type { Experience } from "@prisma/client";
 import type { ExperienceIndexData } from "@/lib/types";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
+import { initials } from "@/lib/portfolio";
 
 function Card({ exp }: { exp: Experience }) {
   return (
     <Link href={`/experience/${exp.slug}`} className="card card-hover group flex h-full flex-col p-5">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
-        {exp.period ? <span>{exp.period}</span> : null}
-        {exp.period && exp.category ? <span>·</span> : null}
-        {exp.category ? <span>{exp.category}</span> : null}
+      <div className="flex items-center gap-3">
+        <span className="media-frame flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden">
+          {exp.logoUrl ? (
+            <img src={exp.logoUrl} alt={exp.company} className="h-full w-full object-contain p-1.5" />
+          ) : (
+            <span className="text-sm font-bold text-brand">{initials(exp.company)}</span>
+          )}
+        </span>
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold leading-tight">{exp.company}</h3>
+          <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+            {exp.period ? <span>{exp.period}</span> : null}
+            {exp.period && exp.category ? <span>·</span> : null}
+            {exp.category ? <span className="truncate">{exp.category}</span> : null}
+          </div>
+        </div>
       </div>
-      <h3 className="mt-2 font-semibold leading-tight">{exp.company}</h3>
-      {exp.role ? <p className="mt-1 line-clamp-2 text-sm text-muted">{exp.role}</p> : null}
+      {exp.role ? <p className="mt-3 line-clamp-2 text-sm text-muted">{exp.role}</p> : null}
       <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-medium text-brand">
         View case study <Icon name="arrow-right" size={15} className="btn-arrow" />
       </span>

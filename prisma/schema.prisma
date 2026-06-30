@@ -79,6 +79,7 @@ model SiteSettings {
   description String?
   logoText    String?
   logoUrl     String?
+  logoIcon    String? // icon name shown in the logo box if no image is uploaded
   faviconUrl  String?
   foundedYear Int?
 

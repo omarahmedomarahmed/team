@@ -61,7 +61,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <div className="grid sm:grid-cols-2 gap-5">
           <F label="Site name" name="siteName" value={s?.siteName} />
           <F label="Legal name" name="legalName" value={s?.legalName} />
-          <F label="Logo text" name="logoText" value={s?.logoText} help="Used when no logo image is uploaded." />
+          <F label="Logo text" name="logoText" value={s?.logoText} help="Always shown as your wordmark." />
+          <F label="Logo icon (optional)" name="logoIcon" value={s?.logoIcon} help="Icon shown in the logo box when no image is uploaded — e.g. rocket, sparkles, briefcase." />
           <F label="Founded year" name="foundedYear" value={s?.foundedYear} type="number" />
           <div className="sm:col-span-2"><F label="Tagline" name="tagline" value={s?.tagline} /></div>
           <ImgF label="Logo image" name="logoUrl" value={s?.logoUrl} />
