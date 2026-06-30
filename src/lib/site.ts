@@ -19,12 +19,12 @@ const DEFAULT_SETTINGS = {
   logoUrl: null as string | null,
   faviconUrl: null as string | null,
   foundedYear: null as number | null,
-  primaryColor: "#7c3aed",
-  accentColor: "#22d3ee",
-  bgColor: "#080711",
-  fgColor: "#ECECF1",
-  fontHeading: "Inter",
-  fontBody: "Inter",
+  primaryColor: "#6E7B3D",
+  accentColor: "#98A86B",
+  bgColor: "#FBF9F4",
+  fgColor: "#3E2C1C",
+  fontHeading: "Geist",
+  fontBody: "Geist",
   email: null as string | null,
   phone: null as string | null,
   address: null as string | null,
@@ -140,6 +140,27 @@ export const getFaqs = cache(async () => {
     where: { status: PUBLISHED },
     orderBy: { order: "asc" },
   });
+});
+
+// --------------------------- Portfolio content -----------------------------
+
+export const getTimelineYears = cache(async () => {
+  return prisma.timelineYear.findMany({
+    where: { status: PUBLISHED },
+    orderBy: [{ order: "asc" }, { year: "asc" }],
+  });
+});
+
+export const getExperiences = cache(async (limit?: number) => {
+  return prisma.experience.findMany({
+    where: { status: PUBLISHED },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    take: limit,
+  });
+});
+
+export const getExperienceBySlug = cache(async (slug: string) => {
+  return prisma.experience.findFirst({ where: { slug, status: PUBLISHED } });
 });
 
 /** Years in business, derived from foundedYear so "15 years" is never stale. */

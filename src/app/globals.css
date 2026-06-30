@@ -4,6 +4,7 @@
    Actual values live in :root and are overridden at runtime from SiteSettings. */
 @theme inline {
   --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
   --color-fg: var(--fg);
   --color-brand: var(--brand);
   --color-accent: var(--accent);
@@ -13,14 +14,20 @@
   --font-sans: var(--font-sans-stack);
 }
 
+/* Light editorial theme. Warm white, chocolate-brown text, olive-green accent.
+   Only --bg/--fg/--brand/--accent are overridden at runtime from SiteSettings;
+   the rest are fixed here. */
 :root {
-  --bg: #080711;
-  --fg: #ececf1;
-  --brand: #7c3aed;
-  --accent: #22d3ee;
-  --muted: #9aa0b4;
-  --line: rgba(255, 255, 255, 0.09);
-  --card: rgba(255, 255, 255, 0.025);
+  --bg: #fbf9f4; /* warm white */
+  --bg-2: #eef1e6; /* very light sage */
+  --fg: #3e2c1c; /* rich chocolate brown */
+  --brand: #6e7b3d; /* olive green */
+  --accent: #98a86b; /* soft light green */
+  --muted: #7e6e5c; /* muted brown */
+  --line: #dcddc8; /* subtle olive border */
+  --card: #ffffff; /* white cards */
+  --radius: 0.75rem; /* single border-radius everywhere */
+  --shadow: 0 1px 2px rgba(62, 44, 28, 0.05), 0 10px 30px rgba(62, 44, 28, 0.06); /* one soft shadow */
   --font-sans-stack: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -37,24 +44,29 @@ body {
   color: var(--fg);
   font-family: var(--font-sans-stack);
   -webkit-font-smoothing: antialiased;
-  /* layered ambient brand glows */
-  background-image:
-    radial-gradient(60rem 60rem at 78% -10%, color-mix(in oklab, var(--brand) 22%, transparent), transparent 60%),
-    radial-gradient(50rem 50rem at 8% 8%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 55%);
-  background-attachment: fixed;
 }
 
 /* ---------------------------- helpers ----------------------------------- */
 
 .container-x {
   width: 100%;
-  max-width: 76rem;
+  max-width: 72rem;
   margin-inline: auto;
   padding-inline: 1.5rem;
 }
 
+/* 8-point vertical rhythm: 96px desktop / 64px mobile. */
 .section-pad {
-  padding-block: clamp(4rem, 9vw, 8rem);
+  padding-block: 4rem;
+}
+@media (min-width: 768px) {
+  .section-pad {
+    padding-block: 6rem;
+  }
+}
+
+.section-sage {
+  background: var(--bg-2);
 }
 
 .eyebrow {
@@ -71,33 +83,50 @@ body {
 .eyebrow::before {
   content: "";
   width: 1.75rem;
-  height: 1px;
-  background: linear-gradient(90deg, var(--brand), var(--accent));
+  height: 2px;
+  background: var(--brand);
 }
 
+/* Repurposed: was a brand→accent gradient; now a flat olive highlight so the
+   ~11 components that use this class neutralize to the light theme with no
+   per-file edits. (Name kept for compatibility.) */
 .gradient-text {
-  background: linear-gradient(100deg, var(--brand), var(--accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--brand);
 }
 
+/* Fixed type scale — never resized per component type; one mobile step only. */
 .title-xl {
-  font-size: clamp(2.4rem, 6vw, 4.6rem);
-  line-height: 1.02;
+  font-size: 2.5rem;
+  line-height: 1.05;
   letter-spacing: -0.03em;
   font-weight: 700;
 }
-
 .title-lg {
-  font-size: clamp(1.9rem, 4vw, 3rem);
-  line-height: 1.06;
+  font-size: 1.8rem;
+  line-height: 1.1;
   letter-spacing: -0.02em;
   font-weight: 700;
 }
+.title-md {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@media (min-width: 768px) {
+  .title-xl {
+    font-size: 3.5rem;
+  }
+  .title-lg {
+    font-size: 2.25rem;
+  }
+  .title-md {
+    font-size: 1.5rem;
+  }
+}
 
 .lead {
-  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-size: 1.125rem;
   line-height: 1.6;
   color: var(--muted);
 }
@@ -107,8 +136,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.85rem 1.5rem;
-  border-radius: 0.7rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.95rem;
   transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
@@ -119,9 +148,12 @@ body {
 }
 
 .btn-primary {
-  color: white;
-  background: linear-gradient(100deg, var(--brand), color-mix(in oklab, var(--accent) 55%, var(--brand)));
-  box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--brand) 70%, transparent);
+  color: #fff;
+  background: var(--brand);
+  box-shadow: var(--shadow);
+}
+.btn-primary:hover {
+  background: color-mix(in oklab, var(--brand) 88%, black);
 }
 
 .btn-ghost {
@@ -136,34 +168,44 @@ body {
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 1rem;
-  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 .card-hover {
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .card-hover:hover {
   transform: translateY(-3px);
-  border-color: color-mix(in oklab, var(--brand) 45%, var(--line));
-  background: color-mix(in oklab, var(--brand) 6%, var(--card));
+  border-color: color-mix(in oklab, var(--brand) 35%, var(--line));
+  box-shadow: 0 2px 4px rgba(62, 44, 28, 0.06), 0 16px 40px rgba(62, 44, 28, 0.08);
 }
 
+/* Per spec 4.5, skill chips share the one border-radius (not pills). */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
+  background: var(--bg-2);
+  font-size: 0.8rem;
+  color: var(--fg);
+}
+
+/* Consistent media/mockup frame for every screenshot, photo, placeholder. */
+.media-frame {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--card);
-  font-size: 0.78rem;
-  color: var(--muted);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .hairline {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line), transparent);
+  background: var(--line);
 }
 
 .prose-body p {
@@ -180,18 +222,17 @@ body {
   justify-content: center;
   width: 3rem;
   height: 3rem;
-  border-radius: 0.85rem;
-  color: color-mix(in oklab, var(--brand) 30%, white);
-  background: color-mix(in oklab, var(--brand) 16%, transparent);
-  border: 1px solid color-mix(in oklab, var(--brand) 28%, var(--line));
+  border-radius: var(--radius);
+  color: var(--brand);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
   transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 .group:hover .icon-badge {
-  background: color-mix(in oklab, var(--brand) 26%, transparent);
-  border-color: color-mix(in oklab, var(--brand) 55%, var(--line));
+  border-color: color-mix(in oklab, var(--brand) 45%, var(--line));
 }
 
-/* ------------------------ industries (glorified) ------------------------ */
+/* ------------------------ industries (legacy, light) -------------------- */
 
 .industry-card {
   display: flex;
@@ -199,30 +240,24 @@ body {
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 1.6rem 1rem;
-  border-radius: 1rem;
+  padding: 1.5rem 1rem;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--card);
-  transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease,
-    box-shadow 0.25s ease;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .industry-card:hover {
   transform: translateY(-4px);
-  border-color: color-mix(in oklab, var(--brand) 50%, var(--line));
-  background: color-mix(in oklab, var(--brand) 8%, var(--card));
-  box-shadow: 0 18px 44px -24px color-mix(in oklab, var(--brand) 80%, transparent);
+  border-color: color-mix(in oklab, var(--brand) 40%, var(--line));
 }
 
 /* ------------------------ motion accents -------------------------------- */
 
+/* Repurposed: was a panning gradient animation; now inert (flat olive text). */
 .gradient-animate {
-  background-size: 220% auto;
-  animation: gradient-pan 6s linear infinite;
-}
-@keyframes gradient-pan {
-  to {
-    background-position: 220% center;
-  }
+  background-size: auto;
+  animation: none;
 }
 
 .btn-arrow {
@@ -231,10 +266,6 @@ body {
 .group:hover .btn-arrow,
 .btn:hover .btn-arrow {
   transform: translateX(3px);
-}
-
-.card-hover:hover {
-  box-shadow: 0 22px 52px -30px color-mix(in oklab, var(--brand) 80%, transparent);
 }
 
 .reveal-badge {
@@ -247,8 +278,8 @@ body {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 999px;
-  color: white;
-  background: color-mix(in oklab, var(--brand) 78%, black);
+  color: #fff;
+  background: var(--brand);
   opacity: 0;
   transform: translateY(-6px) scale(0.9);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -259,9 +290,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gradient-animate {
-    animation: none;
-  }
   html {
     scroll-behavior: auto;
   }

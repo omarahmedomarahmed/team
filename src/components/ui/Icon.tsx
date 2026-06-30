@@ -4,6 +4,8 @@ import {
   Snowflake, House, Sun, Car, Stethoscope, Dumbbell, Flower2, Sofa, ShoppingBag,
   Briefcase, Zap, Landmark, Sparkles, ArrowRight, ArrowUpRight, ArrowLeft, Star, Check,
   CheckCircle2, Plus, Menu, X, Mail, Phone, MapPin, Play,
+  ArrowDown, Award, Quote, ExternalLink, Cpu, Layers, LineChart,
+  Users, Lightbulb, Calendar, Globe, Compass, GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -54,6 +56,19 @@ const MAP: Record<string, LucideIcon> = {
   phone: Phone,
   "map-pin": MapPin,
   play: Play,
+  "arrow-down": ArrowDown,
+  award: Award,
+  quote: Quote,
+  "external-link": ExternalLink,
+  cpu: Cpu,
+  layers: Layers,
+  "line-chart": LineChart,
+  users: Users,
+  lightbulb: Lightbulb,
+  calendar: Calendar,
+  globe: Globe,
+  compass: Compass,
+  "graduation-cap": GraduationCap,
 };
 
 export const ICON_KEYS = Object.keys(MAP);
@@ -62,7 +77,7 @@ export function Icon({
   name,
   className,
   size = 20,
-  strokeWidth = 1.75,
+  strokeWidth = 2,
   fill = "none",
 }: {
   name?: string | null;

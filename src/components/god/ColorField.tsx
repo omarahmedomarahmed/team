@@ -24,7 +24,7 @@ export function ColorField({ name, label, value }: { name: string; label: string
           className={`w-full rounded-lg bg-[var(--card)] border px-3 py-2.5 text-sm font-mono outline-none transition-colors ${
             valid ? "border-line focus:border-[color-mix(in_oklab,var(--brand)_55%,var(--line))]" : "border-red-400/60"
           }`}
-          placeholder="#7c3aed"
+          placeholder="#6E7B3D"
         />
       </div>
       <input type="hidden" name={name} value={color} />

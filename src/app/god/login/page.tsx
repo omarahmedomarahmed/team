@@ -15,7 +15,7 @@ export default async function LoginPage({
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2.5 mb-8 justify-center">
-          <span className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand to-accent" />
+          <span className="h-8 w-8 rounded-[var(--radius)] bg-brand" />
           <span className="font-semibold text-lg">God Mode</span>
         </div>
         <form action={loginAction} className="card p-6 space-y-4">

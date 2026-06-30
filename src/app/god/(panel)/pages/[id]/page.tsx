@@ -20,8 +20,9 @@ const inputCls =
   "w-full rounded-lg bg-[var(--card)] border border-line px-3.5 py-2.5 text-sm outline-none focus:border-[color-mix(in_oklab,var(--brand)_55%,var(--line))] transition-colors";
 
 const SECTION_TYPES = [
+  "PORTRAIT_HERO", "TIMELINE", "CONTACT",
   "HERO", "STATS", "ABOUT", "SERVICES", "PROCESS", "PORTFOLIO", "TEAM",
-  "TESTIMONIALS", "INDUSTRIES", "FAQ", "CTA", "CONTACT", "LOGOS", "RICH_TEXT", "CUSTOM",
+  "TESTIMONIALS", "INDUSTRIES", "FAQ", "CTA", "LOGOS", "RICH_TEXT", "CUSTOM",
 ];
 
 function Check({ name, label, checked }: { name: string; label: string; checked?: boolean }) {

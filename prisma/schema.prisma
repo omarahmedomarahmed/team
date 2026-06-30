@@ -36,6 +36,8 @@ enum UserRole {
 
 enum SectionType {
   HERO
+  PORTRAIT_HERO
+  TIMELINE
   STATS
   ABOUT
   SERVICES
@@ -79,13 +81,13 @@ model SiteSettings {
   faviconUrl  String?
   foundedYear Int?
 
-  // Brand / theme tokens (consumed as CSS variables)
-  primaryColor String @default("#7c3aed")
-  accentColor  String @default("#22d3ee")
-  bgColor      String @default("#080711")
-  fgColor      String @default("#ECECF1")
-  fontHeading  String @default("Inter")
-  fontBody     String @default("Inter")
+  // Brand / theme tokens (consumed as CSS variables) — light editorial defaults
+  primaryColor String @default("#6E7B3D")
+  accentColor  String @default("#98A86B")
+  bgColor      String @default("#FBF9F4")
+  fgColor      String @default("#3E2C1C")
+  fontHeading  String @default("Geist")
+  fontBody     String @default("Geist")
 
   // Contact
   email   String?
@@ -281,6 +283,56 @@ model Faq {
   category String?
   order    Int           @default(0)
   status   PublishStatus @default(PUBLISHED)
+}
+
+/// Career timeline year-block (2017→2026). Each row renders the same reusable
+/// "year block" component — only the content changes (portfolio consistency rule).
+model TimelineYear {
+  id             String        @id @default(cuid())
+  year           Int
+  stageTitle     String
+  story          String?
+  tags           Json          @default("[]") // string[] — stage/company tags
+  learningPoints Json          @default("[]") // string[] (4)
+  takeaway       String?
+  footerQuote    String?
+  stats          Json          @default("[]") // [{ label, value }]
+  imageUrl       String?
+  gallery        Json          @default("[]")
+  experienceSlug String? // optional link to an Experience case study
+  order          Int           @default(0)
+  status         PublishStatus @default(PUBLISHED)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+/// Experience case study. Each row renders the same reusable master template at
+/// /experience/[slug] — exact counts: 3 challenges, 3 contributions, 6
+/// responsibilities, 4 achievement cards, 8 skill chips.
+model Experience {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  company         String
+  role            String?
+  period          String?
+  location        String?
+  industry        String?
+  logoUrl         String?
+  overview        String? // 45–55 words
+  challenges      Json          @default("[]") // string[] (3)
+  contributions   Json          @default("[]") // string[] (3)
+  responsibilities Json         @default("[]") // string[] (6, action-verb)
+  achievements    Json          @default("[]") // [{ title, description }] (4)
+  skills          Json          @default("[]") // string[] (8)
+  gallery         Json          @default("[]") // showcase images
+  footerLesson    String?
+  featured        Boolean       @default(false)
+  order           Int           @default(0)
+  status          PublishStatus @default(PUBLISHED)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Post {

@@ -88,9 +88,9 @@ export async function saveResourceAction(formData: FormData) {
 
   const data = coerceFields(resource!.fields, formData);
 
-  // Auto-slug from title/name when left blank.
+  // Auto-slug from title/name/company when left blank.
   if (resource!.fields.some((f) => f.name === "slug") && !data.slug) {
-    data.slug = slugify(data.title || data.name || "item") || `item-${Date.now().toString(36)}`;
+    data.slug = slugify(data.title || data.name || data.company || "item") || `item-${Date.now().toString(36)}`;
   }
 
   const m = (prisma as any)[resource!.model];
@@ -173,10 +173,10 @@ export async function saveSettingsAction(formData: FormData) {
     logoUrl: get("logoUrl"),
     faviconUrl: get("faviconUrl"),
     foundedYear: foundedYear ? Number(foundedYear) : null,
-    primaryColor: get("primaryColor") || "#7c3aed",
-    accentColor: get("accentColor") || "#22d3ee",
-    bgColor: get("bgColor") || "#080711",
-    fgColor: get("fgColor") || "#ECECF1",
+    primaryColor: get("primaryColor") || "#6E7B3D",
+    accentColor: get("accentColor") || "#98A86B",
+    bgColor: get("bgColor") || "#FBF9F4",
+    fgColor: get("fgColor") || "#3E2C1C",
     email: get("email"),
     phone: get("phone"),
     address: get("address"),

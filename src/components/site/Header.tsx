@@ -7,7 +7,7 @@ export async function SiteHeader() {
   const [settings, nav] = await Promise.all([getSettings(), getNav("HEADER")]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line backdrop-blur-xl bg-[color-mix(in_oklab,var(--bg)_80%,transparent)]">
+    <header className="sticky top-0 z-50 border-b border-line bg-bg">
       <div className="container-x flex h-16 items-center justify-between gap-6">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <Logo settings={settings} />
@@ -27,8 +27,8 @@ export async function SiteHeader() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/contact" className="btn btn-primary">
-            Start a project
+          <Link href="/#contact" className="btn btn-primary">
+            Get in touch
           </Link>
         </div>
 
@@ -48,8 +48,8 @@ export async function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/contact" className="btn btn-primary mt-2">
-              Start a project
+            <Link href="/#contact" className="btn btn-primary mt-2">
+              Get in touch
             </Link>
           </div>
         </details>

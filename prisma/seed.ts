@@ -1,28 +1,23 @@
 /**
- * Seed — populates the platform with the agency's real content.
+ * Seed — populates the site with Omar Abdelgawad's executive portfolio content.
  * Re-runnable: it clears content tables, then recreates everything.
- * Placeholder items (portfolio, testimonials, contact details, brand name)
- * are clearly marked and meant to be replaced in God Mode.
+ * Where a real detail (a metric, a contact handle, an image) wasn't provided it
+ * is left blank or marked [ADD DETAIL] for editing in God Mode — never invented.
  */
 import { PrismaClient, SectionType, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const FOUNDED = 2011;
-const yearsExp = new Date().getFullYear() - FOUNDED;
-
-// Placeholder media (all replaceable in God Mode). Picsum is reliable and
-// hotlinkable; the hero video is a stock loop with the poster image acting as
-// a seamless fallback if the video is ever unavailable.
+// Placeholder media helpers (kept for any non-noBg section an owner adds later).
 const PICSUM = (seed: string, w = 1920, h = 1080) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
 const HERO_VIDEO =
   "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4";
 
 // Bump this when seed content changes to roll it out on the next deploy.
-// Do NOT bump once clients start editing content in God Mode.
-const SEED_VERSION = "2";
+// Do NOT bump once you start editing content in God Mode (it wipes edits).
+const SEED_VERSION = "3";
 
 async function reset() {
   // Delete children before parents to respect FKs.
@@ -42,22 +37,18 @@ async function reset() {
   await prisma.industry.deleteMany();
   await prisma.faq.deleteMany();
   await prisma.post.deleteMany();
+  await prisma.timelineYear.deleteMany();
+  await prisma.experience.deleteMany();
 }
 
-// Fill newly-added fields on existing installs without wiping content.
-async function patchDefaults(current: any) {
-  const patch: any = {};
-  if (!current.mainMarket) patch.mainMarket = "Information Technology";
-  if (!current.subMarket) patch.subMarket = "Digital Advertising";
-  const areas = current.serviceAreas;
-  if (!areas || (Array.isArray(areas) && areas.length === 0)) patch.serviceAreas = ["ALL"];
-  if (Object.keys(patch).length) {
-    await prisma.siteSettings.update({ where: { id: current.id }, data: patch });
-  }
+// Backfill newly-added settings fields on existing installs without wiping
+// content. Nothing to backfill for the portfolio yet — kept as an extension point.
+async function patchDefaults(_current: unknown) {
+  void _current;
 }
 
 async function main() {
-  // Re-seed only when SEED_VERSION changes (rolls out new seed content once on
+  // Re-seed only when SEED_VERSION changes (rolls out new content once on
   // deploy) or when SEED_FORCE=1. Otherwise skip, preserving any edits.
   const current = await prisma.siteSettings.findFirst();
   const storedVersion =
@@ -75,60 +66,39 @@ async function main() {
   // ----------------------------- Settings --------------------------------
   await prisma.siteSettings.create({
     data: {
-      siteName: "Your Agency",
-      legalName: "Your Agency LLC",
-      tagline: "We become your digital department.",
+      siteName: "Omar Abdelgawad",
+      legalName: "Omar Abdelgawad",
+      tagline: "Building products, businesses, and scalable systems from the ground up.",
       description:
-        "A premium digital transformation company that unifies branding, websites, AI, content, and growth into one connected system you own.",
-      logoText: "AGENCY",
-      foundedYear: FOUNDED,
-      primaryColor: "#7c3aed",
-      accentColor: "#22d3ee",
-      bgColor: "#080711",
-      fgColor: "#ECECF1",
-      email: "hello@youragency.com",
-      phone: "+1 (555) 012-3456",
-      address: "Remote-first · Working worldwide",
-      mainMarket: "Information Technology",
-      subMarket: "Digital Advertising",
-      serviceAreas: ["ALL"],
+        "The executive portfolio of Omar Abdelgawad — nearly a decade of evolution from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
+      logoText: "Omar Abdelgawad",
+      // Light editorial theme.
+      primaryColor: "#6E7B3D",
+      accentColor: "#98A86B",
+      bgColor: "#FBF9F4",
+      fgColor: "#3E2C1C",
+      // Contact details are left blank — add yours in God Mode → Settings.
+      email: null,
+      phone: null,
+      address: null,
+      socials: [],
       contactConfig: {
         fields: [
           { name: "name", label: "Your name", type: "text", required: true },
           { name: "email", label: "Email", type: "email", required: true },
-          { name: "phone", label: "Phone", type: "tel", required: false },
-          { name: "company", label: "Company", type: "text", required: false },
-          {
-            name: "service",
-            label: "Service interested in",
-            type: "select",
-            required: false,
-            options: ["Branding", "Website", "SEO & GEO", "Paid Ads", "Content", "Not sure yet"],
-          },
-          { name: "message", label: "Tell us about your business…", type: "textarea", required: true },
+          { name: "company", label: "Company / organization", type: "text", required: false },
+          { name: "message", label: "Your message", type: "textarea", required: true },
         ],
       },
-      socials: [
-        { platform: "Instagram", url: "#" },
-        { platform: "LinkedIn", url: "#" },
-        { platform: "X", url: "#" },
-        { platform: "TikTok", url: "#" },
-      ],
-      metaTitle: "Your Agency — Digital Transformation, Branding & AI-Ready Websites",
+      metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
       metaDescription:
-        "We become your digital department: branding, AI-ready websites with a CMS you own, SEO/GEO, content, and growth — one premium team.",
+        "A decade of evolution (2017–2026): from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
       extra: { seedVersion: SEED_VERSION },
     },
   });
 
   // ----------------------------- Modules ---------------------------------
   const modules = [
-    ["services", "Services"],
-    ["portfolio", "Portfolio"],
-    ["team", "Team"],
-    ["testimonials", "Testimonials"],
-    ["industries", "Industries"],
-    ["faq", "FAQ"],
     ["contact", "Contact"],
     ["blog", "Blog"],
     ["ai_blog", "AI Blog Generation"],
@@ -138,333 +108,512 @@ async function main() {
   });
 
   // ----------------------------- Navigation ------------------------------
-  const headerNav = [
-    ["Services", "/services"],
-    ["Work", "/work"],
-    ["About", "/about"],
-    ["Contact", "/contact"],
+  const nav = [
+    ["Timeline", "/#timeline"],
+    ["Contact", "/#contact"],
   ];
   await prisma.navItem.createMany({
     data: [
-      ...headerNav.map(([label, url], i) => ({ label, url, location: "HEADER" as const, order: i })),
-      ...headerNav.map(([label, url], i) => ({ label, url, location: "FOOTER" as const, order: i })),
+      ...nav.map(([label, url], i) => ({ label, url, location: "HEADER" as const, order: i })),
+      ...nav.map(([label, url], i) => ({ label, url, location: "FOOTER" as const, order: i })),
     ],
   });
 
-  // ----------------------------- Services --------------------------------
-  const services = [
+  // --------------------------- Career timeline ---------------------------
+  const timeline = [
     {
-      slug: "brand-strategy-identity",
-      title: "Brand Strategy & Identity",
-      icon: "target",
-      summary: "Positioning, narrative, and a modern visual identity that makes you the obvious choice.",
-      description:
-        "We start with strategy: who you serve, why you win, and the story that makes it land. Then we design a complete identity — logo, system, guidelines — that looks as trustworthy online as you are in person.\n\nEvery brand we build is engineered to work across your website, content, and campaigns as one coherent system.",
-    },
-    {
-      slug: "web-design-development",
-      title: "Web Design & Development",
-      icon: "monitor",
-      summary: "AI-ready, database-driven websites that are fast, beautiful, and built to convert.",
-      description:
-        "We design and build modern websites where nothing that might change is hardcoded. Every page, section, and word is dynamic and editable — the frontend is just a rendering engine over your content.\n\nThe result is a site that loads fast, ranks well, and moves visitors toward action.",
-    },
-    {
-      slug: "god-mode-cms",
-      title: "God Mode CMS Platform",
-      icon: "settings",
-      summary: "An enterprise admin platform you fully own — edit anything, no developer required.",
-      description:
-        "Every website ships with God Mode: a complete content, configuration, and operations console. Pages, sections, media, forms, branding, SEO, navigation, users and roles — all under your control.\n\nNo agency lock-in. No maintenance fees to change text or images. You own the platform and everything in it.",
-    },
-    {
-      slug: "ai-geo-optimization",
-      title: "AI & GEO Optimization",
-      icon: "bot",
-      summary: "Get discovered by AI search with Generative Engine Optimization and structured authority.",
-      description:
-        "Traditional SEO is no longer enough. We structure your content, metadata, schema, and authority signals so AI systems understand and recommend your business.\n\nWe also wire in AI-powered blog generation so you can publish industry-relevant articles on demand.",
-    },
-    {
-      slug: "seo-search-visibility",
-      title: "SEO & Search Visibility",
-      icon: "search",
-      summary: "Technical, on-page, and content SEO that compounds into durable organic growth.",
-      description:
-        "We make your site fast, crawlable, and authoritative — then build the content and signals that earn rankings for the searches that bring you customers.",
-    },
-    {
-      slug: "paid-advertising",
-      title: "Paid Advertising",
-      icon: "trending-up",
-      summary: "Google and Meta campaigns engineered for measurable, profitable lead generation.",
-      description:
-        "Strategy, creative, and optimization across Google and Meta. We connect ads to landing pages, tracking, and analytics so every dollar is accountable.",
-    },
-    {
-      slug: "content-storytelling",
-      title: "Content & Storytelling",
-      icon: "pen-tool",
-      summary: "Narrative-driven content that educates, builds authority, and drives action.",
-      description:
-        "We don't make generic marketing content. Every brand tells a story, every service explains value, and every page moves visitors forward — from founder stories to case studies and educational content.",
-    },
-    {
-      slug: "social-short-form-video",
-      title: "Social & Short-Form Video",
-      icon: "clapperboard",
-      summary: "Reels, TikTok, UGC, and motion graphics that keep your brand consistent and current.",
-      description:
-        "Social strategy plus the content to fuel it: short-form video, motion graphics, and UGC built to grow reach and reinforce your positioning.",
-    },
-    {
-      slug: "presentations-sales-decks",
-      title: "Presentations & Sales Decks",
-      icon: "presentation",
-      summary: "Company profiles, pitch decks, and proposals that win the room.",
-      description:
-        "Professional, on-brand presentations and business documentation — company profiles, sales decks, pitch decks, and proposals — designed to persuade.",
-    },
-    {
-      slug: "automation-crm",
-      title: "Automation & CRM",
-      icon: "workflow",
-      summary: "Connect forms, leads, and follow-up into systems that run without you.",
-      description:
-        "We wire your website forms, CRM, and notifications together so leads are captured, routed, and followed up automatically.",
-    },
-    {
-      slug: "analytics-reporting",
-      title: "Analytics & Reporting",
-      icon: "bar-chart",
-      summary: "Transparent dashboards and reviews so you always know what's working.",
-      description:
-        "Clear analytics and regular performance reviews that translate data into business decisions — not vanity metrics.",
-    },
-    {
-      slug: "growth-consulting",
-      title: "Growth Consulting",
-      icon: "rocket",
-      summary: "A senior partner thinking in systems, not deliverables, about your growth.",
-      description:
-        "We act as your outsourced executive digital department — advising on positioning, priorities, and the systems that scale your business.",
-    },
-  ];
-  await prisma.service.createMany({
-    data: services.map((s, i) => ({
-      ...s,
-      order: i,
-      featured: i < 6,
-      tagline: s.summary,
-      heroImageUrl: PICSUM(`svc-hero-${s.slug}`, 1600, 900),
-      benefits: [
-        { title: "Senior expertise", description: "Work directly with specialists — never juniors." },
-        { title: "Full ownership", description: "Everything we build is yours to keep and control." },
-        { title: "Built to convert", description: "Designed around your goals, not vanity metrics." },
+      year: 2017,
+      stageTitle: "Learning How Businesses Grow",
+      story:
+        "My career began by learning how people make decisions, how businesses sell, and how teams perform under pressure.",
+      tags: ["Telesales Rep → Team Leader", "iCall Outsourcing"],
+      learningPoints: [
+        "Built strong sales communication skills",
+        "Learned customer psychology and objection handling",
+        "Developed leadership through coaching and team management",
+        "Discovered the importance of measurable performance",
       ],
-      ctaTitle: `Ready to get started with ${s.title.toLowerCase()}?`,
-      ctaText: "Tell us about your business and we'll map out the fastest path forward.",
-    })),
-  });
-
-  // ----------------------------- Team ------------------------------------
-  const team = [
-    {
-      name: "Alex Jaxon",
-      role: "Business Development & Client Success",
-      department: "Client Success",
-      bio: "Co-leads discovery, onboarding, and the relationships that turn projects into long-term partnerships.",
+      takeaway: "Sales taught me that every business problem starts with understanding people.",
+      footerQuote: "The foundation of every product begins with understanding its customer.",
+      stats: [],
+      experienceSlug: "icall-outsourcing",
     },
     {
-      name: "Loui Abbas",
-      role: "Business Development & Client Success",
-      department: "Client Success",
-      bio: "Co-leads sales and account management, ensuring every client gets a premium, senior-level experience.",
-    },
-    {
-      name: "Omar Ahmed",
-      role: "Branding, Technology & Product",
-      department: "Product & Technology",
-      bio: "Leads creative direction, brand, UI/UX, and the engineering behind the God Mode platform and our AI integrations.",
-    },
-    {
-      name: "Abdo Wisdek",
-      role: "Marketing & Growth",
-      department: "Marketing & Growth",
-      bio: "Owns SEO, GEO, and paid performance — turning search and campaigns into measurable, compounding growth.",
-    },
-  ];
-  await prisma.teamMember.createMany({
-    data: team.map((m, i) => ({ ...m, order: i })),
-  });
-
-  // ----------------------------- Industries ------------------------------
-  const industries = [
-    ["Real Estate", "building-2"],
-    ["Construction", "hard-hat"],
-    ["Home Renovation", "hammer"],
-    ["HVAC", "snowflake"],
-    ["Roofing", "house"],
-    ["Solar", "sun"],
-    ["Automotive", "car"],
-    ["Healthcare", "stethoscope"],
-    ["Fitness & Gyms", "dumbbell"],
-    ["Spas & Clinics", "flower-2"],
-    ["Furniture", "sofa"],
-    ["E-Commerce", "shopping-bag"],
-    ["Professional Services", "briefcase"],
-    ["Startups", "zap"],
-    ["Corporate", "landmark"],
-  ];
-  await prisma.industry.createMany({
-    data: industries.map(([name, icon], i) => ({
-      name,
-      icon,
-      order: i,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-    })),
-  });
-
-  // -------------------- Portfolio (PLACEHOLDER samples) ------------------
-  const projects = [
-    {
-      slug: "skyline-realty-rebrand",
-      title: "Skyline Realty Group",
-      client: "Skyline Realty",
-      industry: "Real Estate",
-      summary: "Full rebrand and an AI-ready website that turned a referral-only firm into a lead engine.",
-      services: ["Brand Identity", "Web Design", "God Mode CMS", "SEO/GEO"],
-      results: [
-        { label: "More inbound leads", value: "+180%" },
-        { label: "Page load", value: "0.8s" },
-        { label: "Organic traffic", value: "+240%" },
-        { label: "Client-owned", value: "100%" },
+      year: 2018,
+      stageTitle: "Understanding Customer Experience",
+      story:
+        "Moved beyond selling into customer support, learning how operational excellence creates trust and long-term customer relationships.",
+      tags: ["Customer Support · SME Support", "Vodafone UK"],
+      learningPoints: [
+        "Solved customer problems under pressure",
+        "Learned structured support processes",
+        "Improved communication with diverse customers",
+        "Experienced enterprise operational standards",
       ],
+      takeaway: "Great customer experience is built through consistency, not luck.",
+      footerQuote: "Customer experience became the lens through which I evaluated every product.",
+      stats: [],
+      experienceSlug: "vodafone-uk",
+    },
+    {
+      year: 2019,
+      stageTitle: "Building Better Systems",
+      story: "Shifted from serving customers to improving the systems that served them.",
+      tags: ["Quality Assurance · Operations", "Vodafone UK"],
+      learningPoints: [
+        "Audited operational performance",
+        "Improved quality standards",
+        "Identified process inefficiencies",
+        "Learned data-driven decision making",
+      ],
+      takeaway: "Optimizing systems creates greater impact than optimizing individual tasks.",
+      footerQuote: "Systems thinking became a permanent part of how I solve problems.",
+      stats: [],
+      experienceSlug: "vodafone-uk",
+    },
+    {
+      year: 2020,
+      stageTitle: "Technology Meets Customer Success",
+      story:
+        "Entered HealthTech, combining technical problem solving with customer support in a highly specialized software environment.",
+      tags: ["Technical Support · Healthcare Technology", "3Sixty (Dental Software)"],
+      learningPoints: [
+        "Supported specialized healthcare software",
+        "Solved technical issues remotely",
+        "Worked directly with healthcare professionals",
+        "Strengthened technical communication",
+      ],
+      takeaway: "Technology only creates value when people can confidently use it.",
+      footerQuote: "Technology succeeds only when it improves the human experience.",
+      stats: [],
+      experienceSlug: "3sixty",
+    },
+    {
+      year: 2021,
+      stageTitle: "Learning Startup Operations",
+      story:
+        "Joined fast-moving fintech startups, expanding from operations into leadership, customer success, and business execution.",
+      tags: ["Operations · Customer Success · Leadership", "Fund Ourselves · Welendus"],
+      learningPoints: [
+        "Managed customer operations",
+        "Improved startup processes",
+        "Worked across multiple business functions",
+        "Experienced startup execution at scale",
+      ],
+      takeaway:
+        "Startups taught me that speed matters — but systems determine whether growth is sustainable.",
+      footerQuote: "Execution without systems creates chaos. Systems turn execution into growth.",
+      stats: [],
+      experienceSlug: "fund-ourselves",
+    },
+    {
+      year: 2022,
+      stageTitle: "From Employee to Founder",
+      story:
+        "After years of learning how businesses operate, I took the leap into entrepreneurship by building products from the ground up.",
+      tags: ["Skate-It — Founder", "EL3B — Co-Founder (late 2022)"],
+      learningPoints: [
+        "Founded Egypt's first registered skateboard manufacturing company",
+        "Experienced the realities of building a physical business during economic uncertainty",
+        "Pivoted quickly after market conditions changed following the inflation crisis",
+        "Began solving financial accessibility for young gamers through technology",
+      ],
+      takeaway: "This year marked the transition from executing within companies to creating companies.",
+      footerQuote: "Entrepreneurship taught me that uncertainty is not the exception — it is the environment.",
+      stats: [
+        { label: "Experience Type", value: "Founder" },
+        { label: "Industry", value: "Manufacturing → FinTech" },
+        { label: "Biggest Lesson", value: "Resilience" },
+      ],
+      experienceSlug: "skate-it",
+    },
+    {
+      year: 2023,
+      stageTitle: "Learning Product Thinking",
+      story:
+        "One startup ended, another began, and I shifted my focus from building businesses to building technology products.",
+      tags: ["EL3B", "TEDx Cairo University", "HERU"],
+      learningPoints: [
+        "Built and tested EL3B's first functional MVP",
+        "Delivered a TEDx talk on decision-making and behavioral influence",
+        "Founded HERU to solve infrastructure challenges within esports",
+        "Began thinking like a Product Manager rather than only a founder",
+      ],
+      takeaway: "The best founders eventually become product thinkers.",
+      footerQuote: "The best founders eventually become product thinkers.",
+      stats: [
+        { label: "Products Founded", value: "2" },
+        { label: "Public Speaking", value: "TEDx" },
+        { label: "Industry", value: "Gaming Technology" },
+      ],
+      experienceSlug: "heru",
+    },
+    {
       year: 2024,
+      stageTitle: "Understanding Enterprise Business",
+      story:
+        "While building HERU, I entered commercial real estate and began working directly with enterprise clients, investors, and C-level executives.",
+      tags: ["HERU", "Commercial Real Estate — Office · Retail · Multifamily"],
+      learningPoints: [
+        "Continued building HERU's product strategy and platform architecture",
+        "Worked directly with CFOs, CHROs and executive decision makers",
+        "Learned commercial leasing strategy and occupancy analysis",
+        "Strengthened enterprise communication and consultative selling",
+      ],
+      takeaway: "Enterprise conversations taught me how strategy drives every business decision.",
+      footerQuote: "Enterprise conversations taught me how strategy drives every business decision.",
+      stats: [
+        { label: "Industries", value: "3+" },
+        { label: "Enterprise", value: "Yes" },
+        { label: "Market", value: "United States" },
+      ],
+      experienceSlug: "commercial-real-estate",
     },
     {
-      slug: "apex-climate-hvac",
-      title: "Apex Climate HVAC",
-      client: "Apex Climate",
-      industry: "HVAC",
-      summary: "Local SEO, a high-converting site, and automation that books jobs while they sleep.",
-      services: ["Web Development", "Local SEO", "Automation", "Paid Ads"],
-      results: [
-        { label: "Organic growth", value: "+320%" },
-        { label: "Cost per lead", value: "-46%" },
-        { label: "Booked jobs", value: "+2.1x" },
-      ],
-      year: 2024,
-    },
-    {
-      slug: "vital-form-studio",
-      title: "Vital Form Studio",
-      client: "Vital Form",
-      industry: "Fitness",
-      summary: "A premium brand and booking experience for a boutique fitness studio.",
-      services: ["Brand Strategy", "Web Design", "Short-Form Video"],
-      results: [
-        { label: "Memberships", value: "+135%" },
-        { label: "Booking rate", value: "+58%" },
-      ],
       year: 2025,
+      stageTitle: "The AI Turning Point",
+      story:
+        "Artificial Intelligence transformed the way I build products, allowing me to move from ideas to functional software at unprecedented speed.",
+      tags: ["AI Product Builder"],
+      learningPoints: [
+        "Built complete brands using AI",
+        "Designed and launched websites using AI",
+        "Created production-ready MVPs with authentication and databases",
+        "Developed repeatable systems for rapid product development",
+      ],
+      takeaway: "AI didn't replace my workflow — it multiplied what I was capable of building.",
+      footerQuote: "AI didn't replace my workflow — it multiplied what I was capable of building.",
+      stats: [
+        { label: "Presentations", value: "200+" },
+        { label: "Websites", value: "30+" },
+        { label: "Functional MVPs", value: "10+" },
+      ],
+      experienceSlug: "ai-product-builder",
     },
     {
-      slug: "lumen-living-store",
-      title: "Lumen Living",
-      client: "Lumen Living",
-      industry: "E-Commerce",
-      summary: "An e-commerce revamp that lifted revenue with a faster, story-driven storefront.",
-      services: ["E-Commerce", "Content", "Analytics"],
-      results: [
-        { label: "Revenue", value: "+92%" },
-        { label: "Conversion", value: "+37%" },
-        { label: "Return visits", value: "+64%" },
+      year: 2026,
+      stageTitle: "Building the Future",
+      story:
+        "Today I combine entrepreneurship, product strategy, commercial experience and AI to build scalable technology companies and business systems.",
+      tags: [
+        "Founder",
+        "HERU",
+        "AI Product Builder",
+        "Business Systems",
+        "Commercial Real Estate",
+        "Product Strategy",
       ],
-      year: 2025,
+      learningPoints: [
+        "Building HERU's next generation platform",
+        "Designing AI-powered startups across multiple industries",
+        "Creating production-ready business systems with AI",
+        "Bridging business strategy with technology execution",
+      ],
+      takeaway:
+        "My career is no longer defined by the companies I've worked for — but by the systems and products I'm building.",
+      footerQuote: "Current products: HERU · Therapist AI Scribe · GYMAWY · Tourista · Real Estate CRM",
+      stats: [
+        { label: "Years", value: "9+" },
+        { label: "Products", value: "Multiple" },
+        { label: "Current Mission", value: "Building AI Businesses" },
+      ],
+      experienceSlug: "ai-product-builder",
     },
   ];
-  for (const [i, p] of projects.entries()) {
-    await prisma.project.create({
-      data: {
-        ...p,
-        order: i,
-        featured: i < 2,
-        coverUrl: PICSUM(`work-${p.slug}`, 1600, 1200),
-        gallery: [
-          PICSUM(`${p.slug}-g1`, 1280, 960),
-          PICSUM(`${p.slug}-g2`, 1280, 960),
-          PICSUM(`${p.slug}-g3`, 1280, 960),
-          PICSUM(`${p.slug}-g4`, 1280, 960),
-        ],
-      },
-    });
-  }
+  await prisma.timelineYear.createMany({
+    data: timeline.map((t, i) => ({ ...t, order: i })),
+  });
 
-  // ------------------ Testimonials (PLACEHOLDER samples) -----------------
-  const testimonials = [
+  // --------------------------- Experience cases --------------------------
+  const experiences = [
     {
-      author: "Jordan Mills",
-      role: "Owner",
-      company: "Skyline Realty",
-      quote:
-        "They didn't just give us a website — they became our digital department. We finally look as modern as we are, and we own all of it.",
+      slug: "icall-outsourcing",
+      company: "iCall Outsourcing",
+      role: "Telesales Representative → Team Leader",
+      period: "2017",
+      location: null as string | null,
+      industry: "Business Process Outsourcing · Sales · Customer Acquisition",
+      overview:
+        "Started my professional career in telesales before transitioning into leadership. This role developed the communication, persuasion, coaching, and performance-management skills that became the foundation for every leadership and product role that followed.",
+      challenges: [
+        "High-performance sales environment",
+        "Customer acquisition targets",
+        "Continuous team performance improvement",
+      ],
+      contributions: ["Exceeded performance expectations", "Developed communication skills", "Led and coached team members"],
+      responsibilities: [
+        "Generated outbound sales",
+        "Handled customer objections",
+        "Built client relationships",
+        "Tracked performance metrics",
+        "Coached team members",
+        "Supported operational goals",
+      ],
+      achievements: [
+        { title: "Leadership", description: "Promoted into team leadership" },
+        { title: "Sales", description: "Built strong communication skills" },
+        { title: "Coaching", description: "Mentored new team members" },
+        { title: "Growth", description: "Foundation for future leadership" },
+      ],
+      skills: ["Sales", "Leadership", "Communication", "Coaching", "Negotiation", "CRM", "KPIs", "Customer Psychology"],
+      footerLesson: "Sales taught me that every business begins with understanding people.",
     },
     {
-      author: "Priya Nair",
+      slug: "vodafone-uk",
+      company: "Vodafone UK",
+      role: "Customer Support → SME Support → Quality Assurance",
+      period: "2018 – 2019",
+      location: null,
+      industry: "Telecommunications · Enterprise Support · Operations",
+      overview:
+        "Progressed through multiple roles within Vodafone UK, gaining experience across customer support, SME services, and quality assurance while learning enterprise-scale operations and customer-experience management.",
+      challenges: ["Supporting enterprise customers", "Maintaining quality standards", "Improving customer satisfaction"],
+      contributions: ["Resolved customer issues", "Improved service quality", "Strengthened operational consistency"],
+      responsibilities: [
+        "Delivered customer support",
+        "Performed technical troubleshooting",
+        "Supported SME accounts",
+        "Audited quality",
+        "Monitored performance",
+        "Improved processes",
+      ],
+      achievements: [
+        { title: "Customer Experience", description: "Enterprise service delivery" },
+        { title: "Operations", description: "Process consistency" },
+        { title: "Quality", description: "Operational auditing" },
+        { title: "Growth", description: "Cross-functional experience" },
+      ],
+      skills: ["Customer Success", "Operations", "QA", "CRM", "Problem Solving", "Communication", "Auditing", "Process Improvement"],
+      footerLesson: "Customer experience taught me that consistency creates trust.",
+    },
+    {
+      slug: "3sixty",
+      company: "3Sixty",
+      role: "Technical Support Engineer, Healthcare Technology",
+      period: "2020",
+      location: null,
+      industry: "HealthTech · Dental Software",
+      overview:
+        "Provided technical support for specialized healthcare software, working directly with clinics and professionals to resolve software issues while ensuring reliable system performance and a positive customer experience.",
+      challenges: ["Healthcare software reliability", "Remote troubleshooting", "Customer confidence"],
+      contributions: ["Resolved technical issues", "Supported healthcare professionals", "Improved product understanding"],
+      responsibilities: [
+        "Provided technical support",
+        "Troubleshot remotely",
+        "Investigated software issues",
+        "Resolved incidents",
+        "Communicated with customers",
+        "Shared knowledge",
+      ],
+      achievements: [
+        { title: "HealthTech", description: "Specialized software" },
+        { title: "Technology", description: "Technical troubleshooting" },
+        { title: "Support", description: "Customer confidence" },
+        { title: "Growth", description: "Healthcare exposure" },
+      ],
+      skills: ["Technical Support", "Healthcare", "Communication", "Problem Solving", "Software", "CRM", "Customer Success", "Documentation"],
+      footerLesson: "Technology creates value only when people trust it enough to use it.",
+    },
+    {
+      slug: "fund-ourselves",
+      company: "Fund Ourselves / Welendus",
+      role: "Operations · Customer Success · Leadership",
+      period: "2021",
+      location: null,
+      industry: "FinTech · Lending",
+      overview:
+        "Joined fast-growing fintech startups (Fund Ourselves / Welendus), working across customer success, operations, and leadership. Experienced venture-backed speed and adaptability while improving processes and executing across multiple business functions in a scaling lending environment. [ADD DETAIL: expand to 45–55 words]",
+      challenges: ["Operating at startup speed", "Scaling customer operations", "Executing across multiple functions"],
+      contributions: ["Managed customer operations", "Improved startup processes", "Worked across business functions"],
+      responsibilities: [
+        "Managed customer operations",
+        "Improved processes",
+        "Collaborated cross-functionally",
+        "Optimized workflows",
+        "Supported operations",
+        "Monitored performance",
+      ],
+      achievements: [],
+      skills: [
+        "Operations",
+        "Customer Success",
+        "Leadership",
+        "FinTech",
+        "Startup Execution",
+        "Workflow Design",
+        "Cross-functional Communication",
+        "Continuous Improvement",
+      ],
+      footerLesson: "Fast execution creates momentum; scalable systems create sustainable growth.",
+    },
+    {
+      slug: "skate-it",
+      company: "Skate-It",
       role: "Founder",
-      company: "Vital Form Studio",
-      quote:
-        "The brand, the site, the content — everything works together. Bookings are up and I can edit anything myself in minutes.",
+      period: "2022",
+      location: "Egypt",
+      industry: "Manufacturing · Consumer Products · Sports",
+      overview:
+        "Founded Egypt's first registered skateboard manufacturing company, creating local manufacturing for a market dependent on imports and building a recognizable Egyptian skate brand. Launched amid the post-war inflation crisis, which drove up costs and demand pressure, ultimately leading to closure later that year.",
+      challenges: ["Economic instability and inflation crisis", "Rising manufacturing costs", "Market demand under macro pressure"],
+      contributions: ["Founded the company", "Built the brand identity", "Established local manufacturing"],
+      responsibilities: [
+        "Developed the business model",
+        "Defined brand identity",
+        "Planned manufacturing operations",
+        "Managed suppliers",
+        "Oversaw production planning",
+        "Coordinated logistics",
+      ],
+      achievements: [
+        { title: "First-of-its-kind", description: "Egypt's first registered skateboard factory" },
+        { title: "Brand", description: "Built an Egyptian skate brand" },
+        { title: "Operations", description: "Stood up local manufacturing" },
+        { title: "Resilience", description: "Navigated an inflation crisis" },
+      ],
+      skills: ["Entrepreneurship", "Manufacturing", "Operations", "Brand Strategy", "Supply Chain", "Product Development", "Business Planning", "Leadership"],
+      footerLesson: "Building a business requires resilience, adaptability, and the ability to respond quickly to external market forces.",
     },
     {
-      author: "Marcus Webb",
-      role: "GM",
-      company: "Apex Climate HVAC",
-      quote:
-        "Senior people, fast communication, real results. Our phone rings because of the systems they built.",
+      slug: "el3b",
+      company: "EL3B",
+      role: "Co-Founder · Head of Product · Head of Operations",
+      period: "2022 – 2023",
+      location: "Egypt",
+      industry: "Gaming · FinTech · Payments",
+      overview:
+        "EL3B was a gaming-fintech startup building a closed-loop payment ecosystem for gamers under sixteen who lacked bank access. NFC-enabled cards linked to an internal currency (Ecoin), topped up via authorized gaming vendors across Egypt, with a vision to become a youth-focused digital wallet.",
+      challenges: ["Educating the market", "Building user trust", "Vendor acquisition"],
+      contributions: ["Defined product vision and roadmap", "Designed the wallet and top-up experience", "Built the vendor-network strategy"],
+      responsibilities: [
+        "Defined MVP scope",
+        "Designed user and vendor onboarding",
+        "Designed the wallet and top-up workflow",
+        "Led brand identity",
+        "Recruited vendors",
+        "Conducted customer interviews",
+      ],
+      achievements: [
+        { title: "MVP", description: "Built a functional MVP" },
+        { title: "Network", description: "Established a physical vendor network" },
+        { title: "Validation", description: "Validated demand through real-world testing" },
+        { title: "Concept", description: "Differentiated fintech for underbanked gamers" },
+      ],
+      skills: ["Product Management", "Startup Operations", "Product Discovery", "Business Development", "UX Design", "Go-to-Market", "Partnership Development", "Fundraising Preparation"],
+      footerLesson: "Product-market fit is discovered through customer conversations, not assumptions.",
+    },
+    {
+      slug: "tedx-cairo-university",
+      company: "TEDx Cairo University",
+      role: "Speaker",
+      period: "2023",
+      location: "Cairo, Egypt",
+      industry: "Public Speaking · Thought Leadership",
+      overview:
+        'Delivered a TEDx talk, "Decision Making & The Influence of Promotions," exploring how promotional techniques and cognitive biases shape everyday decisions — helping audiences recognize how external influences affect purchasing behavior and personal choices. [ADD DETAIL: expand to 45–55 words]',
+      challenges: ["Translating research into a story", "Engaging a live audience", "Distilling a complex topic"],
+      contributions: ["Researched and wrote the talk", "Designed the presentation", "Delivered on stage"],
+      responsibilities: [
+        "Researched the topic",
+        "Developed the story",
+        "Wrote the script",
+        "Designed the slides",
+        "Rehearsed the talk",
+        "Delivered on stage",
+      ],
+      achievements: [{ title: "Stage", description: "Spoke at TEDx Cairo University" }],
+      skills: ["Public Speaking", "Storytelling", "Communication", "Research", "Behavioral Psychology", "Presentation Design", "Stage Presence", "Thought Leadership"],
+      footerLesson: "Ideas become far more powerful when communicated through compelling stories rather than information alone.",
+    },
+    {
+      slug: "heru",
+      company: "HERU",
+      role: "Founder & CEO · Head of Product",
+      period: "2023 – Present",
+      location: "MENA",
+      industry: "Esports · Product · AI",
+      overview:
+        "HERU is a multi-sided esports infrastructure platform combining talent discovery, tournament management, sponsorship matching, and organization workflows, with an AI-native product-development approach, built to serve the MENA esports ecosystem. [ADD DETAIL: expand to 45–55 words]",
+      challenges: ["A fragmented esports ecosystem", "No central platform for talent, organizers, and brands", "Manual discovery and operations"],
+      contributions: ["Defined product vision and architecture", "Built the community before launch", "Managed product pivots and CTO transitions"],
+      responsibilities: [
+        "Led product strategy",
+        "Designed UX and wireframes",
+        "Architected the platform",
+        "Built the community",
+        "Created PRDs and documentation",
+        "Designed AI workflows",
+      ],
+      achievements: [
+        { title: "Community", description: "Built an engaged community pre-launch" },
+        { title: "Validation", description: "Validated demand via events and tournaments" },
+        { title: "Documentation", description: "Extensive product docs and architecture" },
+        { title: "Vision", description: "Scalable MENA esports platform" },
+      ],
+      skills: ["Product Strategy", "Business Architecture", "UX Design", "AI Workflow Design", "Community Building", "Roadmapping", "Documentation", "Leadership"],
+      footerLesson: "The best founders eventually become product thinkers.",
+    },
+    {
+      slug: "commercial-real-estate",
+      company: "Commercial Real Estate",
+      role: "Commercial Real Estate Associate — Office/Retail Leasing · Multifamily · Tenant Rep",
+      period: "2024 – Present",
+      location: "NYC · Manhattan · Upstate NY · Charlotte, NC",
+      industry: "Commercial Real Estate · Brokerage",
+      overview:
+        "Entered U.S. commercial real estate, working with brokers, investors, landlords, developers, and C-level executives across office leasing, retail expansion, and multifamily investment — strengthening enterprise sales, consultative selling, occupancy analysis, and investment decision-making.",
+      challenges: ["Reaching executive decision-makers", "Complex leasing and investment decisions", "Long enterprise sales cycles"],
+      contributions: ["Generated enterprise opportunities", "Conducted occupancy and market analysis", "Built executive relationships"],
+      responsibilities: [
+        "Researched office buildings and lease expirations",
+        "Conducted occupancy analysis",
+        "Contacted executive decision-makers",
+        "Presented lease and expansion strategy",
+        "Maintained investor and retailer CRM",
+        "Ran follow-up campaigns",
+      ],
+      achievements: [
+        { title: "Enterprise", description: "Engaged CFOs, CHROs and real-estate directors" },
+        { title: "Markets", description: "NYC, Upstate NY, Charlotte" },
+        { title: "Scope", description: "Office, retail and multifamily" },
+      ],
+      skills: ["Commercial Real Estate", "Tenant Representation", "Occupancy Analysis", "Enterprise Sales", "Consultative Selling", "Negotiation", "Market Research", "CRM Management"],
+      footerLesson: "Every commercial real estate transaction is ultimately a business-strategy decision, not just a property decision.",
+    },
+    {
+      slug: "ai-product-builder",
+      company: "AI Product Builder",
+      role: "Founder · AI Product Builder · Business Systems Architect",
+      period: "2025 – Present",
+      location: null,
+      industry: "Artificial Intelligence · Product Development · SaaS",
+      overview:
+        "Developed AI-native workflows that turn startup ideas into production-ready MVPs — generating brands, websites, applications, and business systems with dramatically reduced development time, using AI as an extension of product strategy rather than a replacement for expertise.",
+      challenges: ["Moving from idea to working software fast", "Building production-ready apps (auth, DB, deploy)", "Defining the right problem"],
+      contributions: ["Built repeatable AI build workflows", "Shipped multiple MVPs", "Created brands, sites, and docs with AI"],
+      responsibilities: [
+        "Engineered prompts and PRDs",
+        "Designed UI/UX",
+        "Planned databases and authentication",
+        "Architected applications",
+        "Deployed production apps",
+        "Documented for developer handoff",
+      ],
+      achievements: [
+        { title: "Presentations", description: "200+ created" },
+        { title: "Websites", description: "30+ built" },
+        { title: "MVPs", description: "10+ functional" },
+        { title: "Products", description: "HERU MVP, Therapist AI Scribe, GYMAWY, Tourista, Real Estate CRM" },
+      ],
+      skills: ["AI Prompt Engineering", "AI Product Design", "Rapid MVP Development", "Business Architecture", "Technical Documentation", "Design Systems", "Automation", "Developer Communication"],
+      footerLesson: "AI is most valuable when combined with deep business understanding.",
     },
   ];
-  await prisma.testimonial.createMany({
-    data: testimonials.map((t, i) => ({ ...t, order: i, featured: true })),
+  await prisma.experience.createMany({
+    data: experiences.map((e, i) => ({ ...e, order: i, featured: i >= 4 })),
   });
 
-  // ----------------------------- FAQs ------------------------------------
-  const faqs = [
-    {
-      question: "Are you a marketing agency or a software company?",
-      answer:
-        "Neither, exactly. We're a digital transformation company that unifies branding, websites, AI, content, and growth into one connected system — your outsourced digital department.",
-    },
-    {
-      question: "Do we actually own our website and platform?",
-      answer:
-        "Yes — completely. Every site ships with God Mode, an enterprise admin where you control content, media, branding, SEO, and more. No lock-in and no fees just to change text or images.",
-    },
-    {
-      question: "What makes you different from a typical agency?",
-      answer:
-        "We think in systems, not deliverables, and we stay deliberately small — accepting only a handful of new clients each quarter so every account gets senior-level attention.",
-    },
-    {
-      question: "What is GEO, and why does it matter?",
-      answer:
-        "Generative Engine Optimization prepares your business to be understood and recommended by AI search. We structure content, schema, and authority signals so you stay visible as discovery shifts to AI.",
-    },
-    {
-      question: "How many clients do you take on?",
-      answer:
-        "A maximum of two new clients per month, and six per quarter. Scarcity is intentional — it's how we keep quality and senior attention high.",
-    },
-    {
-      question: "Which industries do you work with?",
-      answer:
-        "We've served real estate, construction, HVAC, healthcare, fitness, automotive, e-commerce, professional services, and more — each with tailored messaging and architecture.",
-    },
-  ];
-  await prisma.faq.createMany({ data: faqs.map((f, i) => ({ ...f, order: i })) });
-
-  // ----------------------------- Pages & Sections ------------------------
+  // ----------------------------- Home page -------------------------------
   type S = { type: SectionType; data: Record<string, unknown>; enabled?: boolean; noBg?: boolean };
   async function createPage(
     page: {
@@ -486,20 +635,11 @@ async function main() {
         publishedAt: new Date(),
         sections: {
           create: sections.map((s, i) => {
-            // Every section gets a background; heroes get a video with an image
-            // poster fallback. All of this is editable per-section in God Mode.
             const bg = s.noBg
               ? {}
               : s.type === "HERO"
-                ? {
-                    bgVideoUrl: HERO_VIDEO,
-                    bgPosterUrl: PICSUM(`${page.slug}-hero`),
-                    bgOverlay: 64,
-                  }
-                : {
-                    bgImageUrl: PICSUM(`${page.slug}-${s.type.toLowerCase()}-${i}`),
-                    bgOverlay: s.type === "CTA" ? 72 : 80,
-                  };
+                ? { bgVideoUrl: HERO_VIDEO, bgPosterUrl: PICSUM(`${page.slug}-hero`), bgOverlay: 64 }
+                : { bgImageUrl: PICSUM(`${page.slug}-${s.type.toLowerCase()}-${i}`), bgOverlay: 80 };
             return {
               type: s.type,
               order: i,
@@ -513,294 +653,49 @@ async function main() {
     });
   }
 
-  // Home
   await createPage(
     {
       slug: "home",
       title: "Home",
       isHome: true,
       order: 0,
-      metaTitle: "Your Agency — We become your digital department",
+      metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
     },
     [
       {
-        type: "HERO",
+        type: "PORTRAIT_HERO",
+        noBg: true,
         data: {
-          eyebrow: "Premium digital transformation",
-          title: "We don't just build websites.",
-          highlight: "We become your digital department.",
-          subtitle:
-            "Branding, AI-ready websites, content, search visibility, and growth — engineered into one connected system your business actually owns.",
-          primaryCta: { label: "Start a project", href: "/contact" },
-          secondaryCta: { label: "See our work", href: "/work" },
-          badges: ["Branding", "AI-ready websites", "God Mode CMS", "SEO & GEO", "Growth"],
+          eyebrow: "Executive Portfolio",
+          name: "OMAR ABDELGAWAD",
+          roles: "Founder • Product Strategist • AI Systems Architect • Business Builder",
+          statement: "Building products, businesses, and scalable systems from the ground up.",
+          periodLabel: "2017 — 2026",
+          primaryCta: { label: "Explore the timeline", href: "#timeline" },
+          secondaryCta: { label: "Get in touch", href: "#contact" },
         },
       },
       {
-        type: "STATS",
+        type: "TIMELINE",
+        noBg: true,
         data: {
-          items: [
-            { value: `${yearsExp}+`, label: "Years of experience" },
-            { value: "6", label: "New clients / quarter" },
-            { value: "100%", label: "Client-owned platforms" },
-            { value: "11", label: "Specialists on your side" },
-          ],
+          eyebrow: "Career timeline",
+          title: "Nearly a decade of evolution",
+          intro:
+            "Sales → Customer Support → Operations → Leadership → Startup Founder → Product Strategy → Commercial Real Estate → AI Product Builder.",
         },
       },
-      {
-        type: "SERVICES",
-        data: {
-          eyebrow: "What we do",
-          title: "One team for everything",
-          highlight: "digital.",
-          subtitle: "Instead of hiring freelancers and separate agencies, you hire one senior team that owns it all.",
-          limit: 6,
-        },
-      },
-      {
-        type: "ABOUT",
-        data: {
-          eyebrow: "Our philosophy",
-          title: "Systems, not",
-          highlight: "deliverables.",
-          body:
-            "A website alone doesn't grow a business. Neither does a logo, an ad, or SEO on its own. Growth comes when every digital asset reinforces every other one.\n\nSo we build complete ecosystems — brand, website, content, AI visibility, and growth — and we hand you full ownership of all of it.",
-          points: [
-            "Brand strategy & identity",
-            "AI-ready, database-driven websites",
-            "God Mode CMS you fully own",
-            "SEO + GEO for AI search",
-            "Content & short-form video",
-            "Paid media & analytics",
-          ],
-        },
-      },
-      {
-        type: "PROCESS",
-        data: {
-          eyebrow: "How we work",
-          title: "From discovery to",
-          highlight: "compounding growth.",
-          steps: [
-            { title: "Discover", description: "A senior-level call to understand your business, market, and goals." },
-            { title: "Strategy", description: "We design brand, messaging, and system architecture before a pixel is placed." },
-            { title: "Build", description: "Branding, website, God Mode CMS, content, and AI/SEO as one connected system." },
-            { title: "Grow", description: "We optimize, report, and act as your outsourced digital department." },
-          ],
-        },
-      },
-      {
-        type: "PORTFOLIO",
-        data: {
-          eyebrow: "Selected work",
-          title: "Outcomes across",
-          highlight: "every market.",
-          subtitle: "A sample of what happens when branding, web, and growth move as one.",
-          limit: 4,
-        },
-      },
-      {
-        type: "INDUSTRIES",
-        data: {
-          eyebrow: "Industries",
-          title: "Built for",
-          highlight: "your market.",
-          subtitle: "Tailored messaging, architecture, and strategy for the industries we know best.",
-        },
-      },
-      {
-        type: "TESTIMONIALS",
-        data: { eyebrow: "Clients", title: "Partners, not", highlight: "projects." },
-      },
-      {
-        type: "FAQ",
-        data: { eyebrow: "FAQ", title: "Questions,", highlight: "answered." },
-      },
-      {
-        type: "CTA",
-        data: {
-          title: "Ready to modernize",
-          highlight: "your business?",
-          subtitle: "We onboard a maximum of two new clients per month. Tell us about your business.",
-          primaryCta: { label: "Apply to work with us", href: "/contact" },
-          secondaryCta: { label: "Explore services", href: "/services" },
-        },
-      },
-    ],
-  );
-
-  // Services
-  await createPage(
-    {
-      slug: "services",
-      title: "Services",
-      showInNav: true,
-      order: 1,
-      metaTitle: "Services — Branding, Websites, AI, Content & Growth",
-      metaDescription:
-        "End-to-end digital transformation: branding, AI-ready websites with a CMS you own, SEO/GEO, content, paid media, and growth.",
-    },
-    [
-      {
-        type: "HERO",
-        data: {
-          eyebrow: "Services",
-          title: "Everything you need,",
-          highlight: "in one team.",
-          subtitle: "Complete, end-to-end digital transformation — delivered as a connected system, not a pile of deliverables.",
-          primaryCta: { label: "Start a project", href: "/contact" },
-        },
-      },
-      {
-        type: "SERVICES",
-        data: { eyebrow: "Capabilities", title: "What we", highlight: "deliver." },
-      },
-      {
-        type: "PROCESS",
-        data: {
-          eyebrow: "How we work",
-          title: "A clear path to",
-          highlight: "results.",
-          steps: [
-            { title: "Discover", description: "Understand your business, market, and goals." },
-            { title: "Strategy", description: "Design the brand, message, and architecture." },
-            { title: "Build", description: "Execute the full ecosystem end to end." },
-            { title: "Grow", description: "Optimize, report, and scale." },
-          ],
-        },
-      },
-      {
-        type: "CTA",
-        data: {
-          title: "Let's build your",
-          highlight: "digital ecosystem.",
-          primaryCta: { label: "Start a project", href: "/contact" },
-        },
-      },
-    ],
-  );
-
-  // Work
-  await createPage(
-    {
-      slug: "work",
-      title: "Work",
-      showInNav: true,
-      order: 2,
-      metaTitle: "Work — Selected Projects & Case Studies",
-      metaDescription: "A sample of outcomes across the industries we serve.",
-    },
-    [
-      {
-        type: "HERO",
-        data: {
-          eyebrow: "Portfolio",
-          title: "Selected",
-          highlight: "work.",
-          subtitle: "Outcomes from treating branding, website, and growth as one system.",
-        },
-      },
-      { type: "PORTFOLIO", data: { title: "Case", highlight: "studies." } },
-      {
-        type: "CTA",
-        data: { title: "Want results", highlight: "like these?", primaryCta: { label: "Start a project", href: "/contact" } },
-      },
-    ],
-  );
-
-  // About
-  await createPage(
-    {
-      slug: "about",
-      title: "About",
-      showInNav: true,
-      order: 3,
-      metaTitle: "About — A premium boutique digital partner",
-      metaDescription:
-        "A premium, deliberately small digital transformation team. We become your digital department.",
-    },
-    [
-      {
-        type: "HERO",
-        data: {
-          eyebrow: "About us",
-          title: "A premium boutique,",
-          highlight: "by design.",
-          subtitle: "We're not built for volume. We're built for quality, relationships, and long-term partnerships.",
-        },
-      },
-      {
-        type: "ABOUT",
-        data: {
-          eyebrow: "Who we are",
-          title: "Your outsourced",
-          highlight: "digital department.",
-          body:
-            "Clients don't hire freelancers or juggle separate agencies. They hire one experienced team that becomes responsible for everything digital inside their business.\n\nWe stay deliberately small and selective — accepting only a handful of new clients each quarter — so every account gets senior-level attention from people who understand business, not just design.",
-          points: [
-            "Quality over volume",
-            "Relationships over transactions",
-            "Long-term partnerships",
-            "Senior-level attention",
-            "Deep business understanding",
-            "Complete client ownership",
-          ],
-        },
-      },
-      {
-        type: "STATS",
-        data: {
-          items: [
-            { value: `${yearsExp}+`, label: "Years of experience" },
-            { value: "2", label: "New clients / month max" },
-            { value: "11", label: "Specialists" },
-            { value: "100%", label: "Client-owned" },
-          ],
-        },
-      },
-      {
-        type: "TEAM",
-        data: {
-          eyebrow: "The team",
-          title: "Senior people,",
-          highlight: "on your account.",
-          subtitle: "Organized by department with clear ownership across client success, product, and growth.",
-        },
-      },
-      {
-        type: "CTA",
-        data: {
-          title: "Let's talk about",
-          highlight: "your business.",
-          primaryCta: { label: "Start a conversation", href: "/contact" },
-        },
-      },
-    ],
-  );
-
-  // Contact
-  await createPage(
-    {
-      slug: "contact",
-      title: "Contact",
-      showInNav: true,
-      order: 4,
-      metaTitle: "Contact — Start a project",
-      metaDescription: "Tell us about your business and what you want to modernize.",
-    },
-    [
       {
         type: "CONTACT",
+        noBg: true,
         data: {
-          eyebrow: "Contact",
-          title: "Let's build something",
-          highlight: "worth owning.",
+          eyebrow: "Get in touch",
+          title: "THANK YOU",
           subtitle:
-            "We onboard a maximum of two new clients per month. Tell us about your business and we'll be in touch within one business day.",
+            "Building products. Designing systems. Creating businesses. Always learning. Always building. Always curious.",
           showForm: true,
         },
       },
-      { type: "FAQ", data: { eyebrow: "FAQ", title: "Before you", highlight: "reach out." } },
     ],
   );
 
@@ -810,15 +705,17 @@ async function main() {
   await prisma.user.create({
     data: {
       email,
-      name: "Administrator",
+      name: "Omar Abdelgawad",
       passwordHash: await bcrypt.hash(password, 10),
       role: "OWNER",
     },
   });
 
   console.log("Seed complete");
+  console.log(
+    `  Timeline years: ${await prisma.timelineYear.count()}, Experiences: ${await prisma.experience.count()}`,
+  );
   console.log(`  Pages: ${await prisma.page.count()}, Sections: ${await prisma.section.count()}`);
-  console.log(`  Services: ${await prisma.service.count()}, Projects: ${await prisma.project.count()}`);
   console.log(`  Admin login: ${email}`);
 }
 

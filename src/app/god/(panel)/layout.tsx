@@ -14,7 +14,7 @@ const WEBSITE: NavItem[] = [
   { href: "/god/settings", label: "Brand & settings", icon: "settings" },
 ];
 
-const CONTENT_KEYS = ["services", "projects", "team", "testimonials", "industries", "faqs", "posts"];
+const CONTENT_KEYS = ["experience", "timeline", "posts"];
 
 const BUSINESS: NavItem[] = [
   { href: "/god/leads", label: "Leads", icon: "mail" },
@@ -44,7 +44,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[260px_1fr]">
       <aside className="hidden md:flex flex-col border-r border-line p-4 gap-6 sticky top-0 h-screen overflow-y-auto">
         <Link href="/god" className="flex items-center gap-2.5 px-2">
-          <span className="inline-block h-7 w-7 rounded-lg bg-gradient-to-br from-brand to-accent" />
+          <span className="inline-block h-7 w-7 rounded-[var(--radius)] bg-brand" />
           <span className="font-semibold tracking-tight">God Mode</span>
         </Link>
 

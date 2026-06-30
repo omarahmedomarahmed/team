@@ -69,3 +69,22 @@ export interface LogosData {
   title?: string;
   items: string[];
 }
+
+// --------------------------- Portfolio sections ----------------------------
+
+export interface PortraitHeroData {
+  eyebrow?: string;
+  name: string;
+  roles?: string; // "Founder • Product Strategist • AI Systems Architect • Business Builder"
+  statement?: string;
+  periodLabel?: string; // "2017 — 2026"
+  portrait?: string; // uploaded media URL (/api/media/{id})
+  primaryCta?: CTALink;
+  secondaryCta?: CTALink;
+}
+
+export interface TimelineData {
+  eyebrow?: string;
+  title?: string;
+  intro?: string;
+}

@@ -86,10 +86,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <h2 className="font-semibold">Colors</h2>
         <p className="text-xs text-muted -mt-3">Click a swatch or type a hex code — the whole site re-themes.</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-          <ColorField label="Primary" name="primaryColor" value={s?.primaryColor ?? "#7c3aed"} />
-          <ColorField label="Accent" name="accentColor" value={s?.accentColor ?? "#22d3ee"} />
-          <ColorField label="Background" name="bgColor" value={s?.bgColor ?? "#080711"} />
-          <ColorField label="Text" name="fgColor" value={s?.fgColor ?? "#ECECF1"} />
+          <ColorField label="Primary" name="primaryColor" value={s?.primaryColor ?? "#6E7B3D"} />
+          <ColorField label="Accent" name="accentColor" value={s?.accentColor ?? "#98A86B"} />
+          <ColorField label="Background" name="bgColor" value={s?.bgColor ?? "#FBF9F4"} />
+          <ColorField label="Text" name="fgColor" value={s?.fgColor ?? "#3E2C1C"} />
         </div>
       </section>
 

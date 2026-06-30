@@ -8,7 +8,7 @@ export function Contact({ data, settings }: { data: ContactData; settings: Setti
   const cc = settings.contactConfig as { fields?: { name: string; label: string; type: string; required?: boolean; options?: string[] }[] } | undefined;
   const fields = cc && Array.isArray(cc.fields) && cc.fields.length ? cc.fields : undefined;
   return (
-    <section className="container-x section-pad">
+    <section id="contact" className="container-x section-pad">
       <div className="grid gap-12 md:grid-cols-2 md:items-start">
         <Reveal>
           <div>
