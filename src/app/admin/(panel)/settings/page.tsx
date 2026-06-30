@@ -87,10 +87,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <p className="text-xs text-muted -mt-3">Pick a ready-made theme or fine-tune each color — the whole site re-themes.</p>
         <ThemeColors
           initial={{
-            primaryColor: s?.primaryColor ?? "#6E7B3D",
-            accentColor: s?.accentColor ?? "#98A86B",
-            bgColor: s?.bgColor ?? "#FBF9F4",
-            fgColor: s?.fgColor ?? "#3E2C1C",
+            primaryColor: s?.primaryColor ?? "#6E4A6B",
+            accentColor: s?.accentColor ?? "#BBA0B8",
+            bgColor: s?.bgColor ?? "#FAF6F9",
+            fgColor: s?.fgColor ?? "#322331",
           }}
         />
       </section>

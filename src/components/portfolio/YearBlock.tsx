@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import type { TimelineYear } from "@prisma/client";
+import type { TimelineYear, Experience } from "@prisma/client";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
@@ -8,12 +8,15 @@ import { strArr, pairArr } from "@/lib/portfolio";
 
 /**
  * One career "year block" — a single reusable component (spec 4.12). Every year
- * uses the identical layout; only the content changes. Sits on the olive rail.
+ * uses the identical layout; only the content changes. Sits on the brand rail.
  */
-export function YearBlock({ data }: { data: TimelineYear }) {
+export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Experience }) {
   const tags = strArr(data.tags);
   const learningPoints = strArr(data.learningPoints).slice(0, 4);
   const stats = pairArr(data.stats, "label", "value");
+  // Cover image is shared with the linked case study (same image everywhere).
+  const cover = linked?.heroImageUrl || data.imageUrl;
+  const coverSeed = data.experienceSlug || data.stageTitle || String(data.year);
 
   return (
     <div className="relative grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 pb-12 md:gap-6 md:pb-16">
@@ -69,10 +72,10 @@ export function YearBlock({ data }: { data: TimelineYear }) {
             </div>
 
             <div className="media-frame aspect-[4/3]">
-              {data.imageUrl ? (
-                <img src={data.imageUrl} alt={data.stageTitle} className="h-full w-full object-cover" />
+              {cover ? (
+                <img src={cover} alt={data.stageTitle} className="h-full w-full object-cover" />
               ) : (
-                <Placeholder label="Visual" />
+                <Placeholder seed={coverSeed} />
               )}
             </div>
           </div>
@@ -83,11 +86,9 @@ export function YearBlock({ data }: { data: TimelineYear }) {
           {data.footerQuote ? <p className="mt-3 text-xs italic text-muted">{data.footerQuote}</p> : null}
 
           {data.experienceSlug ? (
-            <Link
-              href={`/experience/${data.experienceSlug}`}
-              className="group mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-brand"
-            >
-              View case study <Icon name="arrow-right" size={15} className="btn-arrow" />
+            <Link href={`/experience/${data.experienceSlug}`} className="btn btn-primary group mt-6">
+              View case study
+              <Icon name="arrow-right" size={16} className="btn-arrow" />
             </Link>
           ) : null}
         </div>

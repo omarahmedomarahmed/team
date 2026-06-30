@@ -20,10 +20,10 @@
    placeholders, chips, badges, borders, muted text, shadows — follows the
    branding settings automatically (no hardcoded colors to fall out of sync). */
 :root {
-  --bg: #fbf9f4; /* warm white — from branding */
-  --fg: #3e2c1c; /* text — from branding */
-  --brand: #6e7b3d; /* primary accent — from branding */
-  --accent: #98a86b; /* secondary accent — from branding */
+  --bg: #faf6f9; /* warm white — from branding */
+  --fg: #322331; /* text — from branding */
+  --brand: #6e4a6b; /* primary accent — from branding */
+  --accent: #bba0b8; /* secondary accent — from branding */
 
   /* Derived from the brand tokens above */
   --bg-2: color-mix(in oklab, var(--accent) 14%, var(--bg)); /* tinted section/band/chip bg */

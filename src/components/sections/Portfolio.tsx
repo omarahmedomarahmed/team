@@ -13,6 +13,7 @@ type ProjectItem = {
   client: string | null;
   industry: string | null;
   category: string | null;
+  experienceSlug: string | null;
   summary: string | null;
   coverUrl: string | null;
   services: unknown;
@@ -51,7 +52,7 @@ export function Portfolio({
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
-                    <Placeholder label={p.category || "Showcase"} />
+                    <Placeholder seed={p.experienceSlug || p.slug} label={p.category || "Work"} />
                   )}
                   <span className="reveal-badge">
                     <Icon name="arrow-up-right" size={18} />

@@ -17,7 +17,7 @@ const HERO_VIDEO =
 
 // Bump this when seed content changes to roll it out on the next deploy.
 // Do NOT bump once you start editing content in Admin (it wipes edits).
-const SEED_VERSION = "4";
+const SEED_VERSION = "5";
 
 async function reset() {
   // Delete children before parents to respect FKs.
@@ -73,10 +73,10 @@ async function main() {
         "The executive portfolio of Omar Abdelgawad — nearly a decade of evolution from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
       logoText: "Omar Abdelgawad",
       // Light editorial theme.
-      primaryColor: "#6E7B3D",
-      accentColor: "#98A86B",
-      bgColor: "#FBF9F4",
-      fgColor: "#3E2C1C",
+      primaryColor: "#6E4A6B",
+      accentColor: "#BBA0B8",
+      bgColor: "#FAF6F9",
+      fgColor: "#322331",
       // Contact details are left blank — add yours in God Mode → Settings.
       email: null,
       phone: null,
@@ -641,12 +641,18 @@ async function main() {
     "commercial-real-estate": "Business Development & Sales",
     "ai-product-builder": "Product & AI",
   };
+  // Linked portfolio twins (same item, viewed as a case study and as a portfolio item).
+  const PORTFOLIO_BY_SLUG: Record<string, string> = {
+    heru: "heru-platform",
+    el3b: "el3b-wallet",
+  };
   await prisma.experience.createMany({
     data: experiences.map((e, i) => ({
       ...e,
       order: i,
       featured: ["heru", "ai-product-builder", "commercial-real-estate", "el3b"].includes(e.slug),
       category: CATEGORY_BY_SLUG[e.slug] ?? null,
+      portfolioSlug: PORTFOLIO_BY_SLUG[e.slug] ?? null,
     })),
   });
 
@@ -680,11 +686,24 @@ async function main() {
       summary: "Logo systems, brand guidelines, and visual identities across multiple ventures.",
       services: ["Branding", "Design"] },
   ];
+  // Each portfolio item links back to the experience it came from.
+  const EXP_BY_PORTFOLIO: Record<string, string> = {
+    "heru-platform": "heru",
+    "el3b-wallet": "el3b",
+    "therapist-ai-scribe": "ai-product-builder",
+    gymawy: "ai-product-builder",
+    tourista: "ai-product-builder",
+    "real-estate-crm": "ai-product-builder",
+    "investor-sales-decks": "ai-product-builder",
+    "ai-built-websites": "ai-product-builder",
+    "brand-identity-systems": "ai-product-builder",
+  };
   await prisma.project.createMany({
     data: portfolio.map((p, i) => ({
       slug: p.slug,
       title: p.title,
       category: p.category,
+      experienceSlug: EXP_BY_PORTFOLIO[p.slug] ?? null,
       year: p.year,
       featured: p.featured,
       summary: p.summary,
@@ -772,6 +791,18 @@ async function main() {
           title: "The journey, year by year",
           intro:
             "Sales → Customer Support → Operations → Leadership → Startup Founder → Product Strategy → Commercial Real Estate → AI Product Builder.",
+        },
+      },
+      {
+        type: "STATS",
+        noBg: true,
+        data: {
+          items: [
+            { value: "9+", label: "Years building" },
+            { value: "10", label: "Roles & ventures" },
+            { value: "200+", label: "Presentations created" },
+            { value: "10+", label: "Functional MVPs" },
+          ],
         },
       },
       {

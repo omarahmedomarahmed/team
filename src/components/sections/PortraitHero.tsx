@@ -4,6 +4,7 @@ import type { PortraitHeroData } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
+import { HeroBackdrop } from "@/components/portfolio/HeroBackdrop";
 import { initials } from "@/lib/portfolio";
 
 export function PortraitHero({ data }: { data: PortraitHeroData }) {
@@ -26,18 +27,7 @@ export function PortraitHero({ data }: { data: PortraitHeroData }) {
           />
         </>
       ) : (
-        /* faint blueprint grid on one side (spec 4.8) */
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px)",
-            backgroundSize: "34px 34px",
-            WebkitMaskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
-            maskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
-          }}
-        />
+        <HeroBackdrop />
       )}
 
       <div className="container-x relative pt-24 pb-16 md:pt-32 md:pb-24">
@@ -95,7 +85,7 @@ export function PortraitHero({ data }: { data: PortraitHeroData }) {
                 {data.portrait ? (
                   <img src={data.portrait} alt={data.name} className="h-full w-full object-cover" />
                 ) : (
-                  <Placeholder initials={initials(data.name || "")} />
+                  <Placeholder initials={initials(data.name || "")} seed={data.name} />
                 )}
               </div>
               {data.periodLabel ? (
