@@ -38,6 +38,7 @@ enum SectionType {
   HERO
   PORTRAIT_HERO
   TIMELINE
+  EXPERIENCE_INDEX
   STATS
   ABOUT
   SERVICES
@@ -236,6 +237,7 @@ model Project {
   title           String
   client          String?
   industry        String?
+  category        String? // portfolio work type, e.g. "Platform", "Presentation"
   summary         String?
   description     String?
   coverUrl        String?
@@ -317,6 +319,7 @@ model Experience {
   period          String?
   location        String?
   industry        String?
+  category        String? // work type / department, e.g. "Entrepreneurship"
   logoUrl         String?
   overview        String? // 45–55 words
   challenges      Json          @default("[]") // string[] (3)

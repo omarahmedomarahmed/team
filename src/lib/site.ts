@@ -53,7 +53,7 @@ export const getModuleMap = cache(async (): Promise<Record<string, boolean>> => 
   return Object.fromEntries(mods.map((m) => [m.key, m.enabled]));
 });
 
-/** Feature flag check used by both the public site and God Mode. */
+/** Feature flag check used by both the public site and Admin. */
 export async function isModuleEnabled(key: string): Promise<boolean> {
   const map = await getModuleMap();
   // default to enabled if a module row doesn't exist yet
@@ -101,13 +101,19 @@ export const getServiceBySlug = cache(async (slug: string) => {
   return prisma.service.findFirst({ where: { slug, status: PUBLISHED } });
 });
 
-export const getProjects = cache(async (limit?: number) => {
-  return prisma.project.findMany({
-    where: { status: PUBLISHED },
-    orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
-    take: limit,
-  });
-});
+export const getProjects = cache(
+  async (opts?: { limit?: number; category?: string; featured?: boolean }) => {
+    return prisma.project.findMany({
+      where: {
+        status: PUBLISHED,
+        ...(opts?.category ? { category: opts.category } : {}),
+        ...(opts?.featured ? { featured: true } : {}),
+      },
+      orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
+      take: opts?.limit,
+    });
+  },
+);
 
 export const getProjectBySlug = cache(async (slug: string) => {
   return prisma.project.findFirst({ where: { slug, status: PUBLISHED } });
@@ -151,12 +157,37 @@ export const getTimelineYears = cache(async () => {
   });
 });
 
-export const getExperiences = cache(async (limit?: number) => {
-  return prisma.experience.findMany({
-    where: { status: PUBLISHED },
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    take: limit,
+export const getExperiences = cache(
+  async (opts?: { limit?: number; category?: string; featured?: boolean }) => {
+    return prisma.experience.findMany({
+      where: {
+        status: PUBLISHED,
+        ...(opts?.category ? { category: opts.category } : {}),
+        ...(opts?.featured ? { featured: true } : {}),
+      },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      take: opts?.limit,
+    });
+  },
+);
+
+/** Distinct experience categories (in display order) for nav/overview. */
+export const getExperienceCategories = cache(async (): Promise<string[]> => {
+  const rows = await prisma.experience.findMany({
+    where: { status: PUBLISHED, category: { not: null } },
+    orderBy: { order: "asc" },
+    select: { category: true },
   });
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of rows) {
+    const c = r.category as string;
+    if (c && !seen.has(c)) {
+      seen.add(c);
+      out.push(c);
+    }
+  }
+  return out;
 });
 
 export const getExperienceBySlug = cache(async (slug: string) => {

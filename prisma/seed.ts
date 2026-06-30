@@ -16,8 +16,8 @@ const HERO_VIDEO =
   "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4";
 
 // Bump this when seed content changes to roll it out on the next deploy.
-// Do NOT bump once you start editing content in God Mode (it wipes edits).
-const SEED_VERSION = "3";
+// Do NOT bump once you start editing content in Admin (it wipes edits).
+const SEED_VERSION = "4";
 
 async function reset() {
   // Delete children before parents to respect FKs.
@@ -108,14 +108,34 @@ async function main() {
   });
 
   // ----------------------------- Navigation ------------------------------
-  const nav = [
-    ["Timeline", "/#timeline"],
-    ["Contact", "/#contact"],
+  // Categories group experiences and also become standalone pages.
+  const CATEGORIES: { name: string; slug: string }[] = [
+    { name: "Business Development & Sales", slug: "business-development-sales" },
+    { name: "Customer Support & Operations", slug: "customer-support-operations" },
+    { name: "Entrepreneurship", slug: "entrepreneurship" },
+    { name: "Product & AI", slug: "product-ai" },
+    { name: "Public Speaking", slug: "public-speaking" },
   ];
+
+  // Header: Experience (with a category dropdown), Portfolio, Contact.
+  const experienceParent = await prisma.navItem.create({
+    data: { label: "Experience", url: "/experience", location: "HEADER", order: 0 },
+  });
   await prisma.navItem.createMany({
     data: [
-      ...nav.map(([label, url], i) => ({ label, url, location: "HEADER" as const, order: i })),
-      ...nav.map(([label, url], i) => ({ label, url, location: "FOOTER" as const, order: i })),
+      { label: "By year", url: "/experience", location: "HEADER" as const, order: 0, parentId: experienceParent.id },
+      ...CATEGORIES.map((c, i) => ({
+        label: c.name,
+        url: `/${c.slug}`,
+        location: "HEADER" as const,
+        order: i + 1,
+        parentId: experienceParent.id,
+      })),
+      { label: "Portfolio", url: "/portfolio", location: "HEADER" as const, order: 1 },
+      { label: "Contact", url: "/contact", location: "HEADER" as const, order: 2 },
+      { label: "Experience", url: "/experience", location: "FOOTER" as const, order: 0 },
+      { label: "Portfolio", url: "/portfolio", location: "FOOTER" as const, order: 1 },
+      { label: "Contact", url: "/contact", location: "FOOTER" as const, order: 2 },
     ],
   });
 
@@ -609,8 +629,68 @@ async function main() {
       footerLesson: "AI is most valuable when combined with deep business understanding.",
     },
   ];
+  const CATEGORY_BY_SLUG: Record<string, string> = {
+    "icall-outsourcing": "Business Development & Sales",
+    "vodafone-uk": "Customer Support & Operations",
+    "3sixty": "Customer Support & Operations",
+    "fund-ourselves": "Customer Support & Operations",
+    "skate-it": "Entrepreneurship",
+    "el3b": "Entrepreneurship",
+    "tedx-cairo-university": "Public Speaking",
+    heru: "Product & AI",
+    "commercial-real-estate": "Business Development & Sales",
+    "ai-product-builder": "Product & AI",
+  };
   await prisma.experience.createMany({
-    data: experiences.map((e, i) => ({ ...e, order: i, featured: i >= 4 })),
+    data: experiences.map((e, i) => ({
+      ...e,
+      order: i,
+      featured: ["heru", "ai-product-builder", "commercial-real-estate", "el3b"].includes(e.slug),
+      category: CATEGORY_BY_SLUG[e.slug] ?? null,
+    })),
+  });
+
+  // --------------------------- Portfolio items ---------------------------
+  const portfolio = [
+    { slug: "heru-platform", title: "HERU — Esports Platform", category: "Platform", year: 2024, featured: true,
+      summary: "Multi-sided esports infrastructure — talent discovery, tournaments, sponsorship matching, and AI-native workflows.",
+      services: ["Product Strategy", "UX", "AI Workflows"] },
+    { slug: "therapist-ai-scribe", title: "Therapist AI Scribe", category: "AI Product", year: 2025, featured: true,
+      summary: "AI clinical documentation assistant — session transcription, SOAP notes, and treatment planning.",
+      services: ["AI", "Healthcare", "MVP"] },
+    { slug: "gymawy", title: "GYMAWY — Fitness Platform", category: "Platform", year: 2025, featured: true,
+      summary: "Fitness platform for gyms and members — memberships, workout tracking, scheduling, and community.",
+      services: ["Product", "MVP"] },
+    { slug: "tourista", title: "Tourista — TravelTech", category: "Platform", year: 2025, featured: false,
+      summary: "Lets hotels sell curated tours to guests — marketplace, bookings, and revenue sharing.",
+      services: ["Marketplace", "MVP"] },
+    { slug: "real-estate-crm", title: "Real Estate CRM", category: "Platform", year: 2025, featured: true,
+      summary: "AI-powered CRM — lead management, drip campaigns, automated follow-up, and pipeline tracking.",
+      services: ["AI", "CRM", "Automation"] },
+    { slug: "el3b-wallet", title: "EL3B — Gaming Wallet", category: "Product", year: 2023, featured: false,
+      summary: "Closed-loop gaming payment ecosystem — NFC cards, the Ecoin wallet, and a local vendor network.",
+      services: ["FinTech", "Product"] },
+    { slug: "investor-sales-decks", title: "Investor & Sales Presentations", category: "Presentation", year: 2025, featured: true,
+      summary: "200+ investor decks, sales presentations, and product stories designed end to end.",
+      services: ["Presentation Design", "Storytelling"] },
+    { slug: "ai-built-websites", title: "AI-Built Websites", category: "Website", year: 2025, featured: false,
+      summary: "30+ AI-generated brands, landing pages, and marketing sites shipped fast.",
+      services: ["Web", "Brand", "AI"] },
+    { slug: "brand-identity-systems", title: "Brand Identity Systems", category: "Branding", year: 2024, featured: false,
+      summary: "Logo systems, brand guidelines, and visual identities across multiple ventures.",
+      services: ["Branding", "Design"] },
+  ];
+  await prisma.project.createMany({
+    data: portfolio.map((p, i) => ({
+      slug: p.slug,
+      title: p.title,
+      category: p.category,
+      year: p.year,
+      featured: p.featured,
+      summary: p.summary,
+      services: p.services,
+      order: i,
+    })),
   });
 
   // ----------------------------- Home page -------------------------------
@@ -671,33 +751,158 @@ async function main() {
           roles: "Founder • Product Strategist • AI Systems Architect • Business Builder",
           statement: "Building products, businesses, and scalable systems from the ground up.",
           periodLabel: "2017 — 2026",
-          primaryCta: { label: "Explore the timeline", href: "#timeline" },
-          secondaryCta: { label: "Get in touch", href: "#contact" },
+          primaryCta: { label: "Explore my experience", href: "#timeline" },
+          secondaryCta: { label: "Get in touch", href: "/contact" },
+        },
+      },
+      {
+        type: "LOGOS",
+        noBg: true,
+        data: {
+          eyebrow: "Where I've worked",
+          title: "Companies & ventures",
+          subtitle: "A decade across telecom, healthtech, fintech, gaming, real estate, and AI.",
         },
       },
       {
         type: "TIMELINE",
         noBg: true,
         data: {
-          eyebrow: "Career timeline",
-          title: "Nearly a decade of evolution",
+          eyebrow: "Experience",
+          title: "The journey, year by year",
           intro:
             "Sales → Customer Support → Operations → Leadership → Startup Founder → Product Strategy → Commercial Real Estate → AI Product Builder.",
         },
       },
       {
+        type: "EXPERIENCE_INDEX",
+        noBg: true,
+        data: {
+          eyebrow: "By area",
+          title: "Experience by category",
+          subtitle: "The same journey, grouped by the kind of work.",
+          groupByCategory: true,
+        },
+      },
+      {
+        type: "PORTFOLIO",
+        noBg: true,
+        data: {
+          eyebrow: "Selected work",
+          title: "Platforms & presentations",
+          subtitle: "Products, platforms, and decks I've designed and built.",
+          featured: true,
+          limit: 6,
+        },
+      },
+      {
+        type: "CTA",
+        noBg: true,
+        data: {
+          title: "Let's build something",
+          highlight: "worth owning.",
+          subtitle: "Always learning. Always building. Always curious.",
+          primaryCta: { label: "Get in touch", href: "/contact" },
+          secondaryCta: { label: "See the portfolio", href: "/portfolio" },
+        },
+      },
+    ],
+  );
+
+  // Experience (standalone) — timeline + grouped case studies
+  await createPage(
+    {
+      slug: "experience",
+      title: "Experience",
+      order: 1,
+      metaTitle: "Experience — Omar Abdelgawad",
+      metaDescription: "Career timeline (2017–2026) and case studies by area.",
+    },
+    [
+      {
+        type: "HERO",
+        noBg: true,
+        data: {
+          eyebrow: "Experience",
+          title: "A decade of",
+          highlight: "evolution.",
+          subtitle: "From sales and operations to entrepreneurship, product strategy, commercial real estate, and AI.",
+          primaryCta: { label: "Get in touch", href: "/contact" },
+        },
+      },
+      { type: "TIMELINE", noBg: true, data: { eyebrow: "By year", title: "The journey, year by year" } },
+      { type: "EXPERIENCE_INDEX", noBg: true, data: { eyebrow: "By area", title: "Browse by category", groupByCategory: true } },
+    ],
+  );
+
+  // Portfolio (standalone)
+  await createPage(
+    {
+      slug: "portfolio",
+      title: "Portfolio",
+      order: 2,
+      metaTitle: "Portfolio — Omar Abdelgawad",
+      metaDescription: "Platforms, products, and presentations.",
+    },
+    [
+      {
+        type: "HERO",
+        noBg: true,
+        data: {
+          eyebrow: "Portfolio",
+          title: "Platforms &",
+          highlight: "presentations.",
+          subtitle: "A selection of the products, platforms, and decks I've designed and built.",
+          primaryCta: { label: "Get in touch", href: "/contact" },
+        },
+      },
+      { type: "PORTFOLIO", noBg: true, data: { eyebrow: "All work", title: "Selected work" } },
+    ],
+  );
+
+  // Contact (standalone)
+  await createPage(
+    {
+      slug: "contact",
+      title: "Contact",
+      order: 3,
+      metaTitle: "Contact — Omar Abdelgawad",
+      metaDescription: "Get in touch with Omar Abdelgawad.",
+    },
+    [
+      {
         type: "CONTACT",
         noBg: true,
         data: {
           eyebrow: "Get in touch",
-          title: "THANK YOU",
+          title: "Let's talk",
           subtitle:
-            "Building products. Designing systems. Creating businesses. Always learning. Always building. Always curious.",
+            "Building products. Designing systems. Creating businesses. Always learning, always building.",
           showForm: true,
         },
       },
     ],
   );
+
+  // Department / category pages — each lists its experiences
+  for (const [i, c] of CATEGORIES.entries()) {
+    await createPage(
+      { slug: c.slug, title: c.name, order: 10 + i, metaTitle: `${c.name} — Omar Abdelgawad` },
+      [
+        {
+          type: "HERO",
+          noBg: true,
+          data: {
+            eyebrow: "Experience",
+            title: c.name,
+            subtitle: "Roles and work in this area.",
+            primaryCta: { label: "All experience", href: "/experience" },
+          },
+        },
+        { type: "EXPERIENCE_INDEX", noBg: true, data: { eyebrow: c.name, title: "Case studies", category: c.name } },
+      ],
+    );
+  }
 
   // ----------------------------- Admin user ------------------------------
   const email = process.env.SEED_ADMIN_EMAIL || "admin@example.com";

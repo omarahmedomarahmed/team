@@ -7,6 +7,7 @@ import {
   getFaqs,
   getSettings,
   getTimelineYears,
+  getExperiences,
   isModuleEnabled,
 } from "@/lib/site";
 import type {
@@ -21,12 +22,14 @@ import type {
   LogosData,
   PortraitHeroData,
   TimelineData,
+  ExperienceIndexData,
 } from "@/lib/types";
 import { SectionShell, type SectionBg } from "./SectionShell";
 
 import { Hero } from "./Hero";
 import { PortraitHero } from "./PortraitHero";
 import { Timeline } from "./Timeline";
+import { ExperienceIndex } from "./ExperienceIndex";
 import { Stats } from "./Stats";
 import { About } from "./About";
 import { Services } from "./Services";
@@ -57,6 +60,10 @@ async function renderInner(section: SectionLike) {
       return <PortraitHero data={data as unknown as PortraitHeroData} />;
     case "TIMELINE":
       return <Timeline data={data as unknown as TimelineData} years={await getTimelineYears()} />;
+    case "EXPERIENCE_INDEX": {
+      const d = data as unknown as ExperienceIndexData;
+      return <ExperienceIndex data={d} items={await getExperiences({ category: d.category, limit: d.limit })} />;
+    }
     case "STATS":
       return <Stats data={data as unknown as StatsData} />;
     case "ABOUT":
@@ -68,7 +75,7 @@ async function renderInner(section: SectionLike) {
     case "CTA":
       return <Cta data={data as unknown as CTAData} />;
     case "LOGOS":
-      return <Logos data={data as unknown as LogosData} />;
+      return <Logos data={data as unknown as LogosData} companies={await getExperiences()} />;
 
     case "SERVICES": {
       if (!(await isModuleEnabled("services"))) return null;
@@ -78,7 +85,12 @@ async function renderInner(section: SectionLike) {
     case "PORTFOLIO": {
       if (!(await isModuleEnabled("portfolio"))) return null;
       const d = data as unknown as CollectionSectionData;
-      return <Portfolio data={d} projects={await getProjects(d.limit)} />;
+      return (
+        <Portfolio
+          data={d}
+          projects={await getProjects({ limit: d.limit, category: d.category, featured: d.featured })}
+        />
+      );
     }
     case "TEAM": {
       if (!(await isModuleEnabled("team"))) return null;

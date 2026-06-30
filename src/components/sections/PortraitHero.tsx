@@ -14,18 +14,31 @@ export function PortraitHero({ data }: { data: PortraitHeroData }) {
 
   return (
     <section className="relative overflow-hidden border-b border-line">
-      {/* faint blueprint grid on one side (spec 4.8) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px)",
-          backgroundSize: "34px 34px",
-          WebkitMaskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
-          maskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
-        }}
-      />
+      {data.bgImage ? (
+        <>
+          <img src={data.bgImage} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+          <div
+            className="absolute inset-0 -z-10"
+            style={{
+              background:
+                "linear-gradient(180deg, color-mix(in oklab, var(--bg) 84%, transparent), color-mix(in oklab, var(--bg) 94%, transparent))",
+            }}
+          />
+        </>
+      ) : (
+        /* faint blueprint grid on one side (spec 4.8) */
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 md:block"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px)",
+            backgroundSize: "34px 34px",
+            WebkitMaskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
+            maskImage: "radial-gradient(60% 65% at 75% 25%, #000, transparent 75%)",
+          }}
+        />
+      )}
 
       <div className="container-x relative pt-24 pb-16 md:pt-32 md:pb-24">
         <div className="grid items-center gap-12 md:grid-cols-[1.5fr_minmax(0,1fr)]">
