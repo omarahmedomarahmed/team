@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { HeroData } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
+import { HeroBackdrop } from "@/components/portfolio/HeroBackdrop";
 
 export function Hero({ data, hasBg = false }: { data: HeroData; hasBg?: boolean }) {
   return (
-    <section className="relative overflow-hidden">
-      <div className={`container-x ${hasBg ? "pt-32 pb-28 md:pt-44 md:pb-36" : "pt-24 pb-20 md:pt-32 md:pb-28"}`}>
+    <section className="relative overflow-hidden border-b border-line">
+      {!hasBg ? <HeroBackdrop /> : null}
+      <div className={`container-x ${hasBg ? "pt-32 pb-28 md:pt-44 md:pb-36" : "pt-24 pb-20 md:pt-28 md:pb-24"}`}>
         <div className="max-w-3xl">
           {data.eyebrow ? (
             <Reveal>

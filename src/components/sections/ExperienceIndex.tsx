@@ -32,6 +32,7 @@ export function ExperienceIndex({ data, items }: { data: ExperienceIndexData; it
         }, new Map<string, Experience[]>()),
       ).map(([name, its]) => ({ name, items: its }))
     : null;
+  const maxCount = groups ? Math.max(1, ...groups.map((g) => g.items.length)) : 1;
 
   return (
     <section className="container-x section-pad">
@@ -48,17 +49,39 @@ export function ExperienceIndex({ data, items }: { data: ExperienceIndexData; it
       </Reveal>
 
       {groups ? (
-        <div className="mt-12 space-y-12">
-          {groups.map((g) => (
-            <div key={g.name}>
-              <h3 className="title-md mb-5">{g.name}</h3>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {g.items.map((exp) => (
-                  <Card key={exp.id} exp={exp} />
-                ))}
-              </div>
+        <div className="mt-10">
+          {/* category distribution — a quick visual of roles per area */}
+          <Reveal>
+            <div className="card space-y-3 p-6">
+              {groups.map((g) => (
+                <div key={g.name} className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-36 shrink-0 truncate text-sm font-medium sm:w-52">{g.name}</div>
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-bg-2">
+                    <div className="h-full rounded-full bg-brand" style={{ width: `${(g.items.length / maxCount) * 100}%` }} />
+                  </div>
+                  <div className="w-6 text-right text-sm tabular-nums text-muted">{g.items.length}</div>
+                </div>
+              ))}
             </div>
-          ))}
+          </Reveal>
+
+          <div className="mt-12 space-y-12">
+            {groups.map((g) => (
+              <div key={g.name}>
+                <div className="mb-5 flex flex-wrap items-center gap-3">
+                  <h3 className="title-md">{g.name}</h3>
+                  <span className="chip">
+                    {g.items.length} {g.items.length === 1 ? "role" : "roles"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {g.items.map((exp) => (
+                    <Card key={exp.id} exp={exp} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <Stagger className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

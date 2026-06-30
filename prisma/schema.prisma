@@ -83,10 +83,10 @@ model SiteSettings {
   foundedYear Int?
 
   // Brand / theme tokens (consumed as CSS variables) — light editorial defaults
-  primaryColor String @default("#6E7B3D")
-  accentColor  String @default("#98A86B")
-  bgColor      String @default("#FBF9F4")
-  fgColor      String @default("#3E2C1C")
+  primaryColor String @default("#6E4A6B")
+  accentColor  String @default("#BBA0B8")
+  bgColor      String @default("#FAF6F9")
+  fgColor      String @default("#322331")
   fontHeading  String @default("Geist")
   fontBody     String @default("Geist")
 
@@ -238,6 +238,7 @@ model Project {
   client          String?
   industry        String?
   category        String? // portfolio work type, e.g. "Platform", "Presentation"
+  experienceSlug  String? // optional link to an Experience case study
   summary         String?
   description     String?
   coverUrl        String?
@@ -321,6 +322,8 @@ model Experience {
   industry        String?
   category        String? // work type / department, e.g. "Entrepreneurship"
   logoUrl         String?
+  heroImageUrl    String? // cover image, shared with the timeline block + linked portfolio
+  portfolioSlug   String? // optional link to a Portfolio item
   overview        String? // 45–55 words
   challenges      Json          @default("[]") // string[] (3)
   contributions   Json          @default("[]") // string[] (3)

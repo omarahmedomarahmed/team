@@ -1,11 +1,20 @@
-import type { TimelineYear } from "@prisma/client";
+import type { TimelineYear, Experience } from "@prisma/client";
 import type { TimelineData } from "@/lib/types";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { YearBlock } from "@/components/portfolio/YearBlock";
 import { TimelineMotif } from "@/components/portfolio/TimelineMotif";
 
-export function Timeline({ data, years }: { data: TimelineData; years: TimelineYear[] }) {
+export function Timeline({
+  data,
+  years,
+  experiences = [],
+}: {
+  data: TimelineData;
+  years: TimelineYear[];
+  experiences?: Experience[];
+}) {
+  const bySlug = new Map(experiences.map((e) => [e.slug, e]));
   return (
     <section id="timeline" className="container-x section-pad">
       <Reveal>
@@ -20,7 +29,7 @@ export function Timeline({ data, years }: { data: TimelineData; years: TimelineY
         {years.length ? <TimelineMotif /> : null}
 
         {years.map((y) => (
-          <YearBlock key={y.id} data={y} />
+          <YearBlock key={y.id} data={y} linked={y.experienceSlug ? bySlug.get(y.experienceSlug) : undefined} />
         ))}
 
         {/* the rail ends in an open arrow — the journey is ongoing (spec 4.9) */}

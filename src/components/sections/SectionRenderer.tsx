@@ -59,7 +59,13 @@ async function renderInner(section: SectionLike) {
     case "PORTRAIT_HERO":
       return <PortraitHero data={data as unknown as PortraitHeroData} />;
     case "TIMELINE":
-      return <Timeline data={data as unknown as TimelineData} years={await getTimelineYears()} />;
+      return (
+        <Timeline
+          data={data as unknown as TimelineData}
+          years={await getTimelineYears()}
+          experiences={await getExperiences()}
+        />
+      );
     case "EXPERIENCE_INDEX": {
       const d = data as unknown as ExperienceIndexData;
       return <ExperienceIndex data={d} items={await getExperiences({ category: d.category, limit: d.limit })} />;
