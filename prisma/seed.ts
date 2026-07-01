@@ -542,6 +542,59 @@ async function applyContentV3() {
   await reorderHomeSections();
 }
 
+// Content revision V4 — restore the 2019 (Vodafone QA) year if it was deleted,
+// and seed the Logos wall from the logos already uploaded on experiences.
+async function applyContentV4() {
+  // Re-add 2019 (only if missing) so Vodafone shows in both 2018 and 2019.
+  if (!(await prisma.timelineYear.findFirst({ where: { year: 2019 } }))) {
+    const experiences = await prisma.experience.findMany({
+      select: { id: true, slug: true, company: true, role: true },
+    });
+    const vodafone = findExp(experiences, "vodafone-uk");
+    await prisma.timelineYear.create({
+      data: {
+        year: 2019,
+        stageTitle: "Building Better Systems",
+        story: "Shifted from serving customers to improving the systems that served them.",
+        tags: ["Quality Assurance · Operations", "Vodafone UK"],
+        learningPoints: [
+          "Audited operational performance",
+          "Improved quality standards",
+          "Identified process inefficiencies",
+          "Learned data-driven decision making",
+        ],
+        takeaway: "Optimizing systems creates greater impact than optimizing individual tasks.",
+        footerQuote: "Systems thinking became a permanent part of how I solve problems.",
+        stats: [],
+        experienceIds: vodafone ? [vodafone.id] : [],
+        experienceSlug: "vodafone-uk",
+        order: 2,
+      },
+    });
+  }
+
+  // Seed the Logos wall from experience logos (only when it's still empty), so
+  // there's something to size/reorder immediately — then it's fully manual.
+  if ((await prisma.logo.count()) === 0) {
+    const withLogos = await prisma.experience.findMany({
+      where: { logoUrl: { not: null } },
+      orderBy: { order: "asc" },
+      select: { company: true, logoUrl: true, slug: true },
+    });
+    if (withLogos.length) {
+      await prisma.logo.createMany({
+        data: withLogos.map((e, i) => ({
+          name: e.company,
+          imageUrl: e.logoUrl,
+          url: `/experience/${e.slug}`,
+          scale: 100,
+          order: i,
+        })),
+      });
+    }
+  }
+}
+
 // Backfill new fields on existing installs without wiping content. Each block is
 // guarded by a one-time marker in settings.extra so later manual edits are safe.
 async function patchDefaults(current: unknown) {
@@ -563,6 +616,11 @@ async function patchDefaults(current: unknown) {
     await applyContentV3();
     next.contentV3 = true;
     console.log("Applied content V3: TEDx talk page + embed, AI experience rename (one-time).");
+  }
+  if (!extra.contentV4) {
+    await applyContentV4();
+    next.contentV4 = true;
+    console.log("Applied content V4: restored 2019, seeded logos wall (one-time).");
   }
   if (JSON.stringify(next) !== JSON.stringify(extra)) {
     await prisma.siteSettings.update({ where: { id: settings.id }, data: { extra: next as Prisma.InputJsonValue } });
@@ -612,7 +670,7 @@ async function main() {
       metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
       metaDescription:
         "A decade of evolution (2017–2026): from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
-      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true, contentV2: true, contentV3: true },
+      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true, contentV2: true, contentV3: true, contentV4: true },
     },
   });
 
@@ -1473,6 +1531,8 @@ async function main() {
   await applyContentV2();
   // TEDx talk page + homepage video + AI rename (same transform as live).
   await applyContentV3();
+  // Restore 2019 + seed the logos wall (same transform as live).
+  await applyContentV4();
 
   // ----------------------------- Admin user ------------------------------
   const email = process.env.SEED_ADMIN_EMAIL || "admin@example.com";

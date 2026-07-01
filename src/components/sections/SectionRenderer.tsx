@@ -8,6 +8,7 @@ import {
   getSettings,
   getTimelineYears,
   getExperiences,
+  getLogos,
   isModuleEnabled,
 } from "@/lib/site";
 import type {
@@ -66,6 +67,7 @@ async function renderInner(section: SectionLike) {
           data={data as unknown as TimelineData}
           years={await getTimelineYears()}
           experiences={await getExperiences()}
+          projects={await getProjects()}
         />
       );
     case "EXPERIENCE_INDEX": {
@@ -83,7 +85,7 @@ async function renderInner(section: SectionLike) {
     case "CTA":
       return <Cta data={data as unknown as CTAData} />;
     case "LOGOS":
-      return <Logos data={data as unknown as LogosData} companies={await getExperiences()} />;
+      return <Logos data={data as unknown as LogosData} logos={await getLogos()} companies={await getExperiences()} />;
     case "VIDEO":
       return <Video data={data as unknown as VideoData} />;
 

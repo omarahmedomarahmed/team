@@ -121,6 +121,13 @@ export const getProjectBySlug = cache(async (slug: string) => {
   return prisma.project.findFirst({ where: { slug, status: PUBLISHED } });
 });
 
+export const getLogos = cache(async () => {
+  return prisma.logo.findMany({
+    where: { enabled: true },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+  });
+});
+
 export const getTeam = cache(async () => {
   return prisma.teamMember.findMany({
     where: { status: PUBLISHED },

@@ -282,6 +282,19 @@ model Industry {
   enabled Boolean @default(true)
 }
 
+/// Company / brand logos shown in the LOGOS wall. Managed independently of
+/// experiences so logos can be added manually and sized individually.
+model Logo {
+  id        String   @id @default(cuid())
+  name      String
+  imageUrl  String?
+  url       String? // optional link (e.g. to a case study or external site)
+  scale     Int      @default(100) // per-logo display size, %
+  order     Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
 model Faq {
   id       String        @id @default(cuid())
   question String

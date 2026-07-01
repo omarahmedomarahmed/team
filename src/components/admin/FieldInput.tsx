@@ -94,9 +94,9 @@ export function FieldInput({
       );
     }
     case "image":
-      return <ImageUpload name={field.name} value={value} />;
+      return <ImageUpload name={field.name} value={value} aspect={field.aspect} fit={field.fit} />;
     case "images":
-      return <MultiImageUpload name={field.name} value={Array.isArray(value) ? value : []} />;
+      return <MultiImageUpload name={field.name} value={Array.isArray(value) ? value : []} aspect={field.aspect} fit={field.fit} />;
     case "icon":
       return <input name={field.name} list="icon-keys" defaultValue={value ?? ""} placeholder="e.g. rocket" className={inputCls} />;
     default:

@@ -26,7 +26,18 @@ export type Field = {
   pairKeys?: [string, string]; // for type "pairs"
   relationTo?: string; // for type "relation": the resource key to pick from
   multiple?: boolean; // for type "relation": allow selecting several -> id[]
+  aspect?: number; // for image/images: display aspect ratio (w/h) — the crop guide
+  fit?: "cover" | "contain"; // how the image sits in its frame (contain = logos)
 };
+
+// Common display aspect ratios, so the upload crop-guide matches the site.
+export const RATIO = {
+  square: 1,
+  wide: 16 / 9,
+  banner: 21 / 9,
+  photo: 4 / 3,
+  portrait: 3 / 4,
+} as const;
 
 export type Resource = {
   key: string; // URL segment
@@ -69,8 +80,8 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "location", label: "Location", type: "text" },
       { name: "industry", label: "Industry", type: "text", full: true, help: "Separate with  ·" },
       { name: "category", label: "Category / department", type: "text", help: "Groups this case study, e.g. Entrepreneurship · Sales & Business Development." },
-      { name: "logoUrl", label: "Company logo", type: "image" },
-      { name: "heroImageUrl", label: "Cover image", type: "image", full: true, help: "Shown on the case study and on the timeline, and shared with any portfolio items linked to this experience." },
+      { name: "logoUrl", label: "Company logo", type: "image", aspect: RATIO.square, fit: "contain" },
+      { name: "heroImageUrl", label: "Cover image", type: "image", full: true, aspect: RATIO.banner, fit: "cover", help: "Shown on the case study and on the timeline, and shared with any portfolio items linked to this experience." },
       { name: "videoUrl", label: "Video link (optional)", type: "text", full: true, help: "A talk or demo video URL (e.g. the YouTube link for a TEDx talk). Shows a 'Watch' button on the case study." },
       { name: "overview", label: "Overview", type: "textarea", full: true, help: "45–55 words: what the company does and your relationship to it. To attach portfolio items, open each one under Portfolio and set 'Part of which experience?' — they'll appear here automatically." },
       { name: "challenges", label: "Business challenges", type: "list", full: true, help: "Exactly 3 — one short line each." },
@@ -78,7 +89,7 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "responsibilities", label: "Responsibilities", type: "list", full: true, help: "Exactly 6 — start each with an action verb (Led, Built, Designed…)." },
       { name: "achievements", label: "Achievement cards", type: "pairs", full: true, pairKeys: ["title", "description"], help: "Exactly 4 — one per line:  Title | One sentence." },
       { name: "skills", label: "Skills used", type: "list", full: true, help: "Exactly 8 — one per line." },
-      { name: "gallery", label: "Showcase images", type: "images", full: true },
+      { name: "gallery", label: "Showcase images", type: "images", full: true, aspect: RATIO.photo, fit: "cover" },
       { name: "footerLesson", label: "Footer lesson (one line)", type: "text", full: true },
       { name: "featured", label: "Featured", type: "boolean" },
       { name: "order", label: "Order", type: "number" },
@@ -106,7 +117,8 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "takeaway", label: "Key takeaway (pull-quote)", type: "text", full: true },
       { name: "footerQuote", label: "Footer quote", type: "text", full: true },
       { name: "stats", label: "Stats row (optional)", type: "pairs", full: true, pairKeys: ["label", "value"], help: "One per line:  Label | Value" },
-      { name: "imageUrl", label: "Image / asset", type: "image", full: true },
+      { name: "imageUrl", label: "Main image", type: "image", full: true, aspect: RATIO.photo, fit: "cover" },
+      { name: "gallery", label: "More images (optional)", type: "images", full: true, aspect: RATIO.photo, fit: "cover", help: "Extra photos for this year — shown as a small gallery under the main image." },
       {
         name: "experienceIds",
         label: "Linked case study / studies",
@@ -210,8 +222,8 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "url", label: "External URL", type: "text" },
       { name: "summary", label: "Summary", type: "textarea", full: true },
       { name: "description", label: "Description", type: "textarea", full: true },
-      { name: "coverUrl", label: "Cover image", type: "image", full: true },
-      { name: "gallery", label: "Gallery images", type: "images", full: true },
+      { name: "coverUrl", label: "Cover image", type: "image", full: true, aspect: RATIO.wide, fit: "cover" },
+      { name: "gallery", label: "Gallery images", type: "images", full: true, aspect: RATIO.photo, fit: "cover" },
       { name: "services", label: "Tags", type: "list", full: true, help: "One tag per line (e.g. tech stack or role)." },
       {
         name: "results",
@@ -224,6 +236,27 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "featured", label: "Featured", type: "boolean" },
       { name: "order", label: "Order", type: "number" },
       STATUS,
+    ],
+  },
+  logos: {
+    key: "logos",
+    model: "logo",
+    label: "Logos wall",
+    singular: "Logo",
+    icon: "building-2",
+    orderBy: [{ order: "asc" }],
+    listColumns: [
+      { name: "name", label: "Name" },
+      { name: "order", label: "Order" },
+      { name: "enabled", label: "Enabled" },
+    ],
+    fields: [
+      { name: "name", label: "Name", type: "text", help: "Company / brand name (shown if no logo image)." },
+      { name: "imageUrl", label: "Logo image", type: "image", full: true, aspect: RATIO.square, fit: "contain", help: "Upload and zoom the logo to fill the square — this is how it sits in the logos wall, so you can make them all look consistent." },
+      { name: "url", label: "Link (optional)", type: "text", help: "e.g. /experience/heru or https://…" },
+      { name: "scale", label: "Size %", type: "number", help: "100 = default. Increase to make a small logo appear bigger; decrease to shrink." },
+      { name: "order", label: "Order", type: "number" },
+      { name: "enabled", label: "Enabled", type: "boolean" },
     ],
   },
   testimonials: {
