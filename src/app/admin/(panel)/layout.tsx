@@ -14,7 +14,7 @@ const WEBSITE: NavItem[] = [
   { href: "/admin/settings", label: "Brand & settings", icon: "settings" },
 ];
 
-const CONTENT_KEYS = ["experience", "projects", "timeline", "posts"];
+const CONTENT_KEYS = ["experience", "projects", "timeline", "logos", "posts"];
 
 const BUSINESS: NavItem[] = [
   { href: "/admin/leads", label: "Leads", icon: "mail" },
