@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getExperienceBySlug, getProjectBySlug, getExperiences, getProjects } from "@/lib/site";
 import { CaseStudy } from "@/components/sections/CaseStudy";
+import { strArr } from "@/lib/portfolio";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -20,22 +21,28 @@ export default async function ExperiencePage({ params }: Params) {
   const exp = await getExperienceBySlug(slug);
   if (!exp) notFound();
 
-  const [linkedPortfolio, allExp, featuredPortfolio] = await Promise.all([
-    exp.portfolioSlug ? getProjectBySlug(exp.portfolioSlug) : Promise.resolve(null),
+  // Support multiple linked portfolio items; fall back to the legacy single link.
+  const listed = strArr(exp.portfolioSlugs);
+  const linkedSlugs = listed.length ? listed : exp.portfolioSlug ? [exp.portfolioSlug] : [];
+
+  const [linkedRaw, allExp, featuredPortfolio] = await Promise.all([
+    Promise.all(linkedSlugs.map((s) => getProjectBySlug(s))),
     getExperiences({ limit: 20 }),
     getProjects({ featured: true, limit: 6 }),
   ]);
+  const linkedProjects = linkedRaw.filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const moreExperiences = allExp
     .filter((e) => e.slug !== exp.slug)
     .sort((a, b) => Number(b.featured) - Number(a.featured))
     .slice(0, 3);
-  const related = featuredPortfolio.filter((p) => p.slug !== exp.portfolioSlug).slice(0, 3);
+  const linkedSet = new Set(linkedProjects.map((p) => p.slug));
+  const related = featuredPortfolio.filter((p) => !linkedSet.has(p.slug)).slice(0, 3);
 
   return (
     <CaseStudy
       exp={exp}
-      linkedPortfolio={linkedPortfolio}
+      linkedProjects={linkedProjects}
       moreExperiences={moreExperiences}
       featuredPortfolio={related}
     />

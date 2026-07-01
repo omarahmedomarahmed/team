@@ -33,12 +33,12 @@ function Bullets({ items, icon }: { items: string[]; icon: string }) {
  */
 export function CaseStudy({
   exp,
-  linkedPortfolio,
+  linkedProjects = [],
   moreExperiences = [],
   featuredPortfolio = [],
 }: {
   exp: Experience;
-  linkedPortfolio?: Project | null;
+  linkedProjects?: Project[];
   moreExperiences?: Experience[];
   featuredPortfolio?: Project[];
 }) {
@@ -51,7 +51,8 @@ export function CaseStudy({
   const responsibilities = exactly(strArr(exp.responsibilities), 6);
   const skills = exactly(strArr(exp.skills), 8);
   const gallery = strArr(exp.gallery);
-  const cover = exp.heroImageUrl || linkedPortfolio?.coverUrl || null;
+  const cover = exp.heroImageUrl || linkedProjects[0]?.coverUrl || null;
+  const singleLink = linkedProjects.length === 1 ? linkedProjects[0] : null;
 
   const achievements: Pair[] = pairArr(exp.achievements, "title", "description").slice(0, 4);
   while (achievements.length < 4) achievements.push({ a: ADD_DETAIL, b: "" });
@@ -63,7 +64,9 @@ export function CaseStudy({
     cover: e.heroImageUrl,
     seed: e.slug,
   }));
-  const relatedWork: MoreItem[] = featuredPortfolio.map((p) => ({
+  const workSource = linkedProjects.length ? linkedProjects : featuredPortfolio;
+  const workTitle = linkedProjects.length ? "Portfolio work from this experience" : "From the portfolio";
+  const relatedWork: MoreItem[] = workSource.map((p) => ({
     href: `/portfolio/${p.slug}`,
     title: p.title,
     meta: [p.category, p.year ? String(p.year) : ""].filter(Boolean).join(" · "),
@@ -78,8 +81,8 @@ export function CaseStudy({
           <Link href="/experience" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
             <Icon name="arrow-left" size={15} /> Back to experience
           </Link>
-          {exp.portfolioSlug ? (
-            <Link href={`/portfolio/${exp.portfolioSlug}`} className="btn btn-ghost group">
+          {singleLink ? (
+            <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
               View as portfolio item
               <Icon name="arrow-up-right" size={16} className="btn-arrow" />
             </Link>
@@ -210,8 +213,8 @@ export function CaseStudy({
             Get in touch
             <Icon name="arrow-right" size={18} className="btn-arrow" />
           </Link>
-          {exp.portfolioSlug ? (
-            <Link href={`/portfolio/${exp.portfolioSlug}`} className="btn btn-ghost group">
+          {singleLink ? (
+            <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
               View as portfolio item
               <Icon name="arrow-up-right" size={18} className="btn-arrow" />
             </Link>
@@ -220,7 +223,7 @@ export function CaseStudy({
       </article>
 
       <MoreItems title="More experience" items={moreExp} />
-      <MoreItems title="From the portfolio" items={relatedWork} />
+      <MoreItems title={workTitle} items={relatedWork} />
     </>
   );
 }
