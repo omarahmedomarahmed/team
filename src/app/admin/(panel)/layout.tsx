@@ -19,6 +19,7 @@ const CONTENT_KEYS = ["experience", "projects", "timeline", "posts"];
 const BUSINESS: NavItem[] = [
   { href: "/admin/leads", label: "Leads", icon: "mail" },
   { href: "/admin/modules", label: "Features on/off", icon: "zap" },
+  { href: "/admin/export", label: "Export / snapshot", icon: "search" },
 ];
 
 function Group({ title, items }: { title?: string; items: NavItem[] }) {
