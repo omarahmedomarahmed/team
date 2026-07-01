@@ -68,7 +68,7 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "category", label: "Category / department", type: "text", help: "Groups this case study, e.g. Entrepreneurship · Sales & Business Development." },
       { name: "logoUrl", label: "Company logo", type: "image" },
       { name: "heroImageUrl", label: "Cover image", type: "image", full: true, help: "Shown on the case study and on the timeline; shared with the linked portfolio item." },
-      { name: "portfolioSlug", label: "Linked portfolio item (slug)", type: "text", help: "e.g. heru-platform — links this case study to a portfolio item." },
+      { name: "portfolioSlugs", label: "Linked portfolio items", type: "list", full: true, help: "One portfolio slug per line — e.g. heru-platform. They show as related work on this case study, and their images can be shared." },
       { name: "overview", label: "Overview", type: "textarea", full: true, help: "45–55 words: what the company does and your relationship to it." },
       { name: "challenges", label: "Business challenges", type: "list", full: true, help: "Exactly 3 — one short line each." },
       { name: "contributions", label: "My contribution", type: "list", full: true, help: "Exactly 3 — one short line each." },

@@ -4,7 +4,7 @@ import type { TimelineYear, Experience } from "@prisma/client";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
-import { strArr, pairArr } from "@/lib/portfolio";
+import { strArr, pairArr, initials } from "@/lib/portfolio";
 
 /**
  * One career "year block" — a single reusable component (spec 4.12). Every year
@@ -14,8 +14,9 @@ export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Exper
   const tags = strArr(data.tags);
   const learningPoints = strArr(data.learningPoints).slice(0, 4);
   const stats = pairArr(data.stats, "label", "value");
-  // Cover image is shared with the linked case study (same image everywhere).
-  const cover = linked?.heroImageUrl || data.imageUrl;
+  // Timeline image is editable here (Admin → Career timeline). Falls back to the
+  // linked case study's cover so the image can be shared automatically.
+  const cover = data.imageUrl || linked?.heroImageUrl;
   const coverSeed = data.experienceSlug || data.stageTitle || String(data.year);
 
   return (
@@ -29,9 +30,20 @@ export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Exper
 
       <Reveal>
         <div>
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-3xl font-bold tracking-tight md:text-4xl">{data.year}</span>
-            <h3 className="title-md">{data.stageTitle}</h3>
+          <div className="flex items-center gap-4">
+            {linked ? (
+              <span className="media-frame flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden">
+                {linked.logoUrl ? (
+                  <img src={linked.logoUrl} alt={linked.company} className="h-full w-full object-contain p-1.5" />
+                ) : (
+                  <span className="text-sm font-bold text-brand">{initials(linked.company)}</span>
+                )}
+              </span>
+            ) : null}
+            <div className="min-w-0">
+              <div className="text-xl font-bold text-brand md:text-2xl">{data.year}</div>
+              <h3 className="title-lg leading-tight">{data.stageTitle}</h3>
+            </div>
           </div>
 
           {tags.length ? (

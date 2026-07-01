@@ -638,10 +638,19 @@ async function main() {
     "commercial-real-estate": "Business Development & Sales",
     "ai-product-builder": "Product & AI",
   };
-  // Linked portfolio twins (same item, viewed as a case study and as a portfolio item).
-  const PORTFOLIO_BY_SLUG: Record<string, string> = {
-    heru: "heru-platform",
-    el3b: "el3b-wallet",
+  // Linked portfolio items — an experience can link to several.
+  const PORTFOLIOS_BY_SLUG: Record<string, string[]> = {
+    heru: ["heru-platform"],
+    el3b: ["el3b-wallet"],
+    "ai-product-builder": [
+      "therapist-ai-scribe",
+      "gymawy",
+      "tourista",
+      "real-estate-crm",
+      "investor-sales-decks",
+      "ai-built-websites",
+      "brand-identity-systems",
+    ],
   };
   await prisma.experience.createMany({
     data: experiences.map((e, i) => ({
@@ -649,7 +658,8 @@ async function main() {
       order: i,
       featured: ["heru", "ai-product-builder", "commercial-real-estate", "el3b"].includes(e.slug),
       category: CATEGORY_BY_SLUG[e.slug] ?? null,
-      portfolioSlug: PORTFOLIO_BY_SLUG[e.slug] ?? null,
+      portfolioSlugs: PORTFOLIOS_BY_SLUG[e.slug] ?? [],
+      portfolioSlug: PORTFOLIOS_BY_SLUG[e.slug]?.[0] ?? null,
     })),
   });
 
