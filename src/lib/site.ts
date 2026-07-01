@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { prisma } from "@/lib/db";
+import { strArr } from "@/lib/portfolio";
 
 // ---------------------------------------------------------------------------
 // Data-access helpers. Server Components call these; nothing reads hardcoded
@@ -194,6 +195,57 @@ export const getExperienceCategories = cache(async (): Promise<string[]> => {
 export const getExperienceBySlug = cache(async (slug: string) => {
   return prisma.experience.findFirst({ where: { slug, status: PUBLISHED } });
 });
+
+/** Resolve a list of experience ids to records, preserving the given order. */
+export const getExperiencesByIds = cache(async (ids: string[]) => {
+  const clean = ids.filter((s): s is string => typeof s === "string" && s.length > 0);
+  if (!clean.length) return [];
+  const rows = await prisma.experience.findMany({ where: { id: { in: clean }, status: PUBLISHED } });
+  const map = new Map(rows.map((r) => [r.id, r]));
+  return clean.flatMap((id) => {
+    const e = map.get(id);
+    return e ? [e] : [];
+  });
+});
+
+/**
+ * All portfolio items belonging to an experience. The link is set once, on the
+ * portfolio item (experienceId); we also match the legacy slug links so nothing
+ * is lost while data is migrated. This is the single source of truth for the
+ * Experience → Portfolio relationship (derived, not hand-maintained on both sides).
+ */
+export const getProjectsForExperience = cache(
+  async (exp: { id: string; slug: string; portfolioSlug?: string | null; portfolioSlugs?: unknown }) => {
+    const legacy = [...strArr(exp.portfolioSlugs), exp.portfolioSlug].filter(
+      (s): s is string => typeof s === "string" && s.length > 0,
+    );
+    return prisma.project.findMany({
+      where: {
+        status: PUBLISHED,
+        OR: [
+          { experienceId: exp.id },
+          { experienceSlug: exp.slug },
+          ...(legacy.length ? [{ slug: { in: legacy } }] : []),
+        ],
+      },
+      orderBy: [{ featured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
+    });
+  },
+);
+
+/** The experience a portfolio item belongs to — by stable id, then legacy slug. */
+export const getExperienceForProject = cache(
+  async (p: { experienceId?: string | null; experienceSlug?: string | null }) => {
+    if (p.experienceId) {
+      const byId = await prisma.experience.findFirst({ where: { id: p.experienceId, status: PUBLISHED } });
+      if (byId) return byId;
+    }
+    if (p.experienceSlug) {
+      return prisma.experience.findFirst({ where: { slug: p.experienceSlug, status: PUBLISHED } });
+    }
+    return null;
+  },
+);
 
 /** Years in business, derived from foundedYear so "15 years" is never stale. */
 export function yearsInBusiness(foundedYear?: number | null): number | null {

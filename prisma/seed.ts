@@ -41,10 +41,85 @@ async function reset() {
   await prisma.experience.deleteMany();
 }
 
-// Backfill newly-added settings fields on existing installs without wiping
-// content. Nothing to backfill for the portfolio yet — kept as an extension point.
-async function patchDefaults(_current: unknown) {
-  void _current;
+/**
+ * Convert the old free-text slug links into stable id-based links, and repair
+ * the specific references that broke when items were renamed in the admin.
+ *
+ * Safe to run on live data: it only *fills in* ids that are missing or point at
+ * a record that no longer exists, and never clears a link that already resolves.
+ * Timeline years and portfolio items point at experiences; the Experience →
+ * Portfolio direction is then derived from those ids (one source of truth).
+ */
+async function unifyLinks() {
+  const experiences = await prisma.experience.findMany({
+    select: { id: true, slug: true, company: true, role: true },
+  });
+  if (!experiences.length) return;
+
+  const byId = new Map(experiences.map((e) => [e.id, e]));
+  const bySlug = new Map(experiences.map((e) => [e.slug, e]));
+
+  // Locate the "AI products" experience however it is currently named or slugged
+  // (it was renamed from `ai-product-builder`, which broke the links into it).
+  const aiExp =
+    experiences.find((e) => e.slug === "ai-product-builder") ||
+    experiences.find((e) => /multiple ai|ai product|ai-product/i.test(`${e.slug} ${e.company} ${e.role ?? ""}`)) ||
+    null;
+  // Slugs that used to resolve to the AI experience before the renames.
+  const AI_ALIASES = new Set(["ai-product-builder", "24therapy", "24-therapy", "multiple ai products"]);
+
+  const resolve = (currentId: string | null, slug: string | null): string | null => {
+    if (currentId && byId.has(currentId)) return currentId; // keep a good id
+    if (slug && bySlug.has(slug)) return bySlug.get(slug)!.id; // resolve a valid slug
+    if (slug && aiExp && AI_ALIASES.has(slug.toLowerCase())) return aiExp.id; // repair a known alias
+    return null;
+  };
+
+  // Portfolio items → their parent experience (single).
+  const projects = await prisma.project.findMany({
+    select: { id: true, experienceId: true, experienceSlug: true },
+  });
+  for (const p of projects) {
+    const resolved = resolve(p.experienceId ?? null, p.experienceSlug ?? null);
+    if (resolved && resolved !== p.experienceId) {
+      await prisma.project.update({ where: { id: p.id }, data: { experienceId: resolved } });
+    }
+  }
+
+  // Timeline years → their case study/studies (one or more).
+  const years = await prisma.timelineYear.findMany({
+    select: { id: true, experienceIds: true, experienceSlug: true },
+  });
+  for (const y of years) {
+    const existing = Array.isArray(y.experienceIds)
+      ? (y.experienceIds as unknown[]).filter((x): x is string => typeof x === "string")
+      : [];
+    const good = existing.filter((id) => byId.has(id));
+    let ids = good;
+    if (!ids.length) {
+      const resolved = resolve(null, y.experienceSlug ?? null);
+      if (resolved) ids = [resolved];
+    }
+    if (ids.length && JSON.stringify(ids) !== JSON.stringify(existing)) {
+      await prisma.timelineYear.update({ where: { id: y.id }, data: { experienceIds: ids } });
+    }
+  }
+}
+
+// Backfill new fields on existing installs without wiping content. Guarded by a
+// one-time marker in settings.extra so a later manual edit is never overwritten.
+async function patchDefaults(current: unknown) {
+  const settings = current as { id: string; extra?: unknown } | null;
+  if (!settings) return;
+  const extra = (settings.extra && typeof settings.extra === "object" ? settings.extra : {}) as Record<string, unknown>;
+  if (!extra.linksUnifiedV1) {
+    await unifyLinks();
+    await prisma.siteSettings.update({
+      where: { id: settings.id },
+      data: { extra: { ...extra, linksUnifiedV1: true } },
+    });
+    console.log("Unified timeline/portfolio links to experiences by id, and repaired broken references (one-time).");
+  }
 }
 
 async function main() {
@@ -90,7 +165,7 @@ async function main() {
       metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
       metaDescription:
         "A decade of evolution (2017–2026): from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
-      extra: { seedVersion: SEED_VERSION },
+      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true },
     },
   });
 
@@ -718,6 +793,10 @@ async function main() {
       order: i,
     })),
   });
+
+  // Resolve the slug links above into stable id links (experienceId /
+  // experienceIds) so a fresh install matches the id-based model too.
+  await unifyLinks();
 
   // ----------------------------- Home page -------------------------------
   type S = { type: SectionType; data: Record<string, unknown>; enabled?: boolean; noBg?: boolean };

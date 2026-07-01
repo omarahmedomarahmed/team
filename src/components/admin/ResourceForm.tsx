@@ -4,7 +4,15 @@ import { ICON_KEYS } from "@/components/ui/Icon";
 import type { Resource } from "@/lib/admin/resources";
 import { FieldInput } from "@/components/admin/FieldInput";
 
-export function ResourceForm({ resource, record }: { resource: Resource; record: any }) {
+export function ResourceForm({
+  resource,
+  record,
+  relationOptions,
+}: {
+  resource: Resource;
+  record: any;
+  relationOptions?: Record<string, { value: string; label: string }[]>;
+}) {
   const id = record?.id ?? "new";
   const isEdit = id !== "new";
   return (
@@ -22,7 +30,7 @@ export function ResourceForm({ resource, record }: { resource: Resource; record:
           {resource.fields.map((f) => (
             <div key={f.name} className={f.full ? "sm:col-span-2" : ""}>
               <label className="block text-sm font-medium mb-1.5">{f.label}</label>
-              <FieldInput field={f} value={record?.[f.name]} />
+              <FieldInput field={f} value={record?.[f.name]} options={relationOptions?.[f.name]} />
               {f.help ? <p className="text-xs text-muted mt-1.5">{f.help}</p> : null}
             </div>
           ))}

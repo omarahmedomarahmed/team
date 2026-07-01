@@ -10,14 +10,15 @@ import { strArr, pairArr, initials } from "@/lib/portfolio";
  * One career "year block" — a single reusable component (spec 4.12). Every year
  * uses the identical layout; only the content changes. Sits on the brand rail.
  */
-export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Experience }) {
+export function YearBlock({ data, linked = [] }: { data: TimelineYear; linked?: Experience[] }) {
+  const primary = linked[0];
   const tags = strArr(data.tags);
   const learningPoints = strArr(data.learningPoints).slice(0, 4);
   const stats = pairArr(data.stats, "label", "value");
   // Timeline image is editable here (Admin → Career timeline). Falls back to the
   // linked case study's cover so the image can be shared automatically.
-  const cover = data.imageUrl || linked?.heroImageUrl;
-  const coverSeed = data.experienceSlug || data.stageTitle || String(data.year);
+  const cover = data.imageUrl || primary?.heroImageUrl;
+  const coverSeed = primary?.slug || data.experienceSlug || data.stageTitle || String(data.year);
 
   return (
     <div className="relative grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 pb-12 md:gap-6 md:pb-16">
@@ -31,12 +32,12 @@ export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Exper
       <Reveal>
         <div>
           <div className="flex items-center gap-4">
-            {linked ? (
+            {primary ? (
               <span className="media-frame flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden">
-                {linked.logoUrl ? (
-                  <img src={linked.logoUrl} alt={linked.company} className="h-full w-full object-contain p-1.5" />
+                {primary.logoUrl ? (
+                  <img src={primary.logoUrl} alt={primary.company} className="h-full w-full object-contain p-1.5" />
                 ) : (
-                  <span className="text-sm font-bold text-brand">{initials(linked.company)}</span>
+                  <span className="text-sm font-bold text-brand">{initials(primary.company)}</span>
                 )}
               </span>
             ) : null}
@@ -97,7 +98,16 @@ export function YearBlock({ data, linked }: { data: TimelineYear; linked?: Exper
           ) : null}
           {data.footerQuote ? <p className="mt-3 text-xs italic text-muted">{data.footerQuote}</p> : null}
 
-          {data.experienceSlug ? (
+          {linked.length ? (
+            <div className="mt-6 flex flex-wrap gap-3">
+              {linked.map((e) => (
+                <Link key={e.id} href={`/experience/${e.slug}`} className="btn btn-primary group">
+                  {linked.length > 1 ? `View ${e.company}` : "View case study"}
+                  <Icon name="arrow-right" size={16} className="btn-arrow" />
+                </Link>
+              ))}
+            </div>
+          ) : data.experienceSlug ? (
             <Link href={`/experience/${data.experienceSlug}`} className="btn btn-primary group mt-6">
               View case study
               <Icon name="arrow-right" size={16} className="btn-arrow" />

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getExperienceBySlug, getProjectBySlug, getExperiences, getProjects } from "@/lib/site";
+import { getExperienceBySlug, getExperiences, getProjects, getProjectsForExperience } from "@/lib/site";
 import { CaseStudy } from "@/components/sections/CaseStudy";
-import { strArr } from "@/lib/portfolio";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -21,16 +20,13 @@ export default async function ExperiencePage({ params }: Params) {
   const exp = await getExperienceBySlug(slug);
   if (!exp) notFound();
 
-  // Support multiple linked portfolio items; fall back to the legacy single link.
-  const listed = strArr(exp.portfolioSlugs);
-  const linkedSlugs = listed.length ? listed : exp.portfolioSlug ? [exp.portfolioSlug] : [];
-
-  const [linkedRaw, allExp, featuredPortfolio] = await Promise.all([
-    Promise.all(linkedSlugs.map((s) => getProjectBySlug(s))),
+  // Portfolio items are derived from the reverse link (each item points here via
+  // experienceId) — one source of truth, no hand-maintained list on this side.
+  const [linkedProjects, allExp, featuredPortfolio] = await Promise.all([
+    getProjectsForExperience(exp),
     getExperiences({ limit: 20 }),
     getProjects({ featured: true, limit: 6 }),
   ]);
-  const linkedProjects = linkedRaw.filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const moreExperiences = allExp
     .filter((e) => e.slug !== exp.slug)

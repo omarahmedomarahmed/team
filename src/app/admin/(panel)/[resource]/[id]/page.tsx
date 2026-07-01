@@ -25,6 +25,23 @@ export default async function ResourceEdit({
     notFound();
   }
 
+  // Load options for any "relation" fields so they render as pick-from-a-list
+  // dropdowns (storing the target's stable id — links survive renames).
+  const relationOptions: Record<string, { value: string; label: string }[]> = {};
+  for (const f of resource.fields) {
+    if (f.type !== "relation" || !f.relationTo) continue;
+    const rel = getResource(f.relationTo);
+    if (!rel) continue;
+    const rows: any[] = await (prisma as any)[rel.model].findMany({
+      orderBy: rel.orderBy ?? [{ createdAt: "desc" }],
+    });
+    const labelKey = rel.listColumns[0]?.name ?? "title";
+    relationOptions[f.name] = rows.map((r) => ({
+      value: r.id,
+      label: String(r[labelKey] ?? r.title ?? r.company ?? r.name ?? r.slug ?? r.id),
+    }));
+  }
+
   return (
     <div className="space-y-6">
       <div>

@@ -5,8 +5,51 @@ import type { Field } from "@/lib/admin/resources";
 export const inputCls =
   "w-full rounded-lg bg-[var(--card)] border border-line px-3.5 py-2.5 text-sm outline-none focus:border-[color-mix(in_oklab,var(--brand)_55%,var(--line))] transition-colors";
 
-export function FieldInput({ field, value }: { field: Field; value: any }) {
+export function FieldInput({
+  field,
+  value,
+  options,
+}: {
+  field: Field;
+  value: any;
+  options?: { value: string; label: string }[];
+}) {
   switch (field.type) {
+    case "relation": {
+      const opts = options ?? [];
+      if (!opts.length) {
+        return (
+          <p className={`${inputCls} text-muted`}>Nothing to link yet — create a {field.relationTo} first.</p>
+        );
+      }
+      if (field.multiple) {
+        const selected: string[] = Array.isArray(value) ? value.map(String) : [];
+        return (
+          <div className="rounded-lg border border-line bg-[var(--card)] p-2 max-h-56 overflow-y-auto space-y-1">
+            {opts.map((o) => (
+              <label key={o.value} className="flex items-center gap-2 px-1.5 py-1 rounded-md hover:bg-[var(--bg-2)] cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  name={field.name}
+                  value={o.value}
+                  defaultChecked={selected.includes(o.value)}
+                  className="h-4 w-4 accent-[var(--brand)]"
+                />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <select name={field.name} defaultValue={value ?? ""} className={inputCls}>
+          <option value="">— none —</option>
+          {opts.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      );
+    }
     case "textarea":
       return <textarea name={field.name} rows={field.full ? 5 : 3} defaultValue={value ?? ""} className={inputCls} />;
     case "number":
