@@ -81,12 +81,20 @@ export function CaseStudy({
           <Link href="/experience" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
             <Icon name="arrow-left" size={15} /> Back to experience
           </Link>
-          {singleLink ? (
-            <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
-              View as portfolio item
-              <Icon name="arrow-up-right" size={16} className="btn-arrow" />
-            </Link>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {exp.videoUrl ? (
+              <a href={exp.videoUrl} target="_blank" rel="noreferrer" className="btn btn-ghost group">
+                Watch the talk
+                <Icon name="external-link" size={16} className="btn-arrow" />
+              </a>
+            ) : null}
+            {singleLink ? (
+              <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
+                View as portfolio item
+                <Icon name="arrow-up-right" size={16} className="btn-arrow" />
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {/* header */}
@@ -213,6 +221,12 @@ export function CaseStudy({
             Get in touch
             <Icon name="arrow-right" size={18} className="btn-arrow" />
           </Link>
+          {exp.videoUrl ? (
+            <a href={exp.videoUrl} target="_blank" rel="noreferrer" className="btn btn-ghost group">
+              Watch the talk
+              <Icon name="external-link" size={18} className="btn-arrow" />
+            </a>
+          ) : null}
           {singleLink ? (
             <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
               View as portfolio item

@@ -71,6 +71,7 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "category", label: "Category / department", type: "text", help: "Groups this case study, e.g. Entrepreneurship · Sales & Business Development." },
       { name: "logoUrl", label: "Company logo", type: "image" },
       { name: "heroImageUrl", label: "Cover image", type: "image", full: true, help: "Shown on the case study and on the timeline, and shared with any portfolio items linked to this experience." },
+      { name: "videoUrl", label: "Video link (optional)", type: "text", full: true, help: "A talk or demo video URL (e.g. the YouTube link for a TEDx talk). Shows a 'Watch' button on the case study." },
       { name: "overview", label: "Overview", type: "textarea", full: true, help: "45–55 words: what the company does and your relationship to it. To attach portfolio items, open each one under Portfolio and set 'Part of which experience?' — they'll appear here automatically." },
       { name: "challenges", label: "Business challenges", type: "list", full: true, help: "Exactly 3 — one short line each." },
       { name: "contributions", label: "My contribution", type: "list", full: true, help: "Exactly 3 — one short line each." },

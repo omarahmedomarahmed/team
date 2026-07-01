@@ -326,6 +326,7 @@ model Experience {
   category        String? // work type / department, e.g. "Entrepreneurship"
   logoUrl         String?
   heroImageUrl    String? // cover image, shared with the timeline block + linked portfolio
+  videoUrl        String? // optional talk/demo video (e.g. the TEDx talk) — renders a "Watch" button
   portfolioSlug   String? // legacy single link — kept as a fallback
   portfolioSlugs  Json          @default("[]") // links to one or more Portfolio items
   overview        String? // 45–55 words

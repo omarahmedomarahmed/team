@@ -106,19 +106,364 @@ async function unifyLinks() {
   }
 }
 
-// Backfill new fields on existing installs without wiping content. Guarded by a
-// one-time marker in settings.extra so a later manual edit is never overwritten.
+// ---------------------------------------------------------------------------
+//  Content revision V2 — the corrected career (voice-dictated). Applied the
+//  SAME way to a fresh seed and to the live database, so both tell one story.
+//  Everything here is additive or a targeted field update; uploaded images
+//  (timeline imageUrl/gallery, logos, covers) are never touched.
+// ---------------------------------------------------------------------------
+
+// Match an experience robustly by canonical slug OR a name pattern, so it is
+// found even after slugs/titles were renamed in the admin.
+const EXP_MATCHERS: { key: string; slug: string; re: RegExp }[] = [
+  { key: "icall-outsourcing", slug: "icall-outsourcing", re: /icall/i },
+  { key: "vodafone-uk", slug: "vodafone-uk", re: /vodafone/i },
+  { key: "3sixty", slug: "3sixty", re: /3\s*sixty|threesixty|\b360\b/i },
+  { key: "fund-ourselves", slug: "fund-ourselves", re: /fund\s*ourselves|welendus|we\s*lend/i },
+  { key: "skate-it", slug: "skate-it", re: /skate/i },
+  { key: "el3b", slug: "el3b", re: /el\s*3\s*b/i },
+  { key: "tedx-cairo-university", slug: "tedx-cairo-university", re: /tedx/i },
+  { key: "heru", slug: "heru", re: /\bheru\b/i },
+  { key: "xanadu", slug: "xanadu", re: /xanadu/i },
+  { key: "commercial-real-estate", slug: "commercial-real-estate", re: /commercial real estate|cresa/i },
+  { key: "ai-product-builder", slug: "ai-product-builder", re: /ai product|multiple ai|ai-product/i },
+];
+
+type ExpLite = { id: string; slug: string; company: string; role?: string | null; order?: number };
+function findExp(list: ExpLite[], key: string): ExpLite | null {
+  const m = EXP_MATCHERS.find((x) => x.key === key);
+  if (!m) return null;
+  return (
+    list.find((e) => e.slug === m.slug) ||
+    list.find((e) => m.re.test(`${e.slug} ${e.company} ${e.role ?? ""}`)) ||
+    null
+  );
+}
+
+// The corrected timeline: which experience(s) each year shows.
+const TIMELINE_EXPERIENCES: Record<number, string[]> = {
+  2017: ["icall-outsourcing"],
+  2018: ["vodafone-uk"],
+  2019: ["vodafone-uk"],
+  2020: ["3sixty"],
+  2021: ["fund-ourselves"],
+  2022: ["fund-ourselves"],
+  2023: ["skate-it", "el3b"],
+  2024: ["heru", "tedx-cairo-university", "xanadu"],
+  2025: ["commercial-real-estate", "ai-product-builder", "heru"],
+  2026: ["ai-product-builder"],
+};
+
+// The new Business Development consulting experience.
+const XANADU_EXPERIENCE = {
+  slug: "xanadu",
+  company: "Xanadu",
+  role: "Business Development Consultant",
+  period: "2024",
+  location: null as string | null,
+  industry: "Consulting · Business Development · Advisory",
+  category: "Business Development & Sales",
+  overview:
+    "Worked as a business development consultant with Xanadu, advising eight companies, apps, and startups across e-commerce, drop-shipping, cyber-security, SaaS, legal tech, and design. Combined advisory work with hands-on execution — building outbound and enterprise-sales motions and closing deals directly for several of the brands.",
+  challenges: ["Advising across very different industries", "Turning strategy into real pipeline", "Standing up outbound from scratch"],
+  contributions: ["Advised founders and leadership teams", "Built and ran direct business development", "Closed enterprise deals for multiple brands"],
+  responsibilities: [
+    "Advised on go-to-market and growth strategy",
+    "Built outbound and enterprise-sales motions",
+    "Ran direct outreach and prospecting",
+    "Closed deals and partnerships",
+    "Designed sales processes and CRM",
+    "Coached client teams on business development",
+  ],
+  achievements: [
+    { title: "8 brands", description: "Advised e-commerce, SaaS, security, legal and design companies" },
+    { title: "Advisory + execution", description: "Both consulting and hands-on deal closing" },
+    { title: "Enterprise sales", description: "Direct outreach and closing for multiple clients" },
+    { title: "Go-to-market", description: "Stood up repeatable outbound motions" },
+  ],
+  skills: ["Business Development", "Enterprise Sales", "Go-to-Market", "Advisory", "Consulting", "Partnerships", "CRM", "Sales Strategy"],
+  footerLesson: "Great consulting is measured by the pipeline and deals it creates, not just the advice it gives.",
+};
+
+// The eight brands advised under Xanadu — each becomes a portfolio item.
+const XANADU_CLIENTS = [
+  { slug: "nabda", title: "Nabda", category: "E-commerce", summary: "Advisory and business development for Nabda, an online store.", services: ["Advisory", "Business Development"] },
+  { slug: "taager", title: "Taager", category: "E-commerce", summary: "Consulting and business development for Taager, a drop-shipping platform.", services: ["Advisory", "Business Development"] },
+  { slug: "asfaleia", title: "Asfaleia", category: "Cybersecurity", summary: "Advisory and enterprise sales for Asfaleia, a cyber-security company.", services: ["Advisory", "Enterprise Sales"] },
+  { slug: "bricks", title: "Bricks", category: "SaaS", summary: "Consulting and business development for Bricks, a sales CRM platform.", services: ["Advisory", "Business Development"] },
+  { slug: "knowteq-holdings", title: "Knowteq Holdings", category: "Holdings", summary: "Advisory for Knowteq Holdings.", services: ["Advisory"] },
+  { slug: "fawelly", title: "Fawelly", category: "App", summary: "Consulting and business development for Fawelly, a consumer app.", services: ["Advisory", "Business Development"] },
+  { slug: "contrato", title: "Contrato", category: "Legal Tech", summary: "Advisory and business development for Contrato, a legal-services platform.", services: ["Advisory", "Business Development"] },
+  { slug: "tremoloo", title: "Tremoloo", category: "Design", summary: "Consulting and business development for Tremoloo, a UX/UI design studio.", services: ["Advisory", "Business Development"] },
+];
+
+// Targeted field updates to existing experiences (period moves + relabels).
+// Only these scalar fields are touched — the rest of each case study is left as-is.
+const EXPERIENCE_UPDATES: { key: string; data: Record<string, unknown> }[] = [
+  { key: "skate-it", data: { period: "2022 – 2023" } },
+  { key: "el3b", data: { period: "2023" } },
+  {
+    key: "tedx-cairo-university",
+    data: {
+      period: "2024",
+      overview:
+        "Delivered a TEDx talk on how emotions shape our decisions — exploring the influence of emotion and bias over the choices we make every day, and how becoming aware of those forces leads to clearer, better decision-making.",
+    },
+  },
+  { key: "heru", data: { period: "2024 – Present" } },
+  {
+    key: "commercial-real-estate",
+    data: {
+      company: "CRESA",
+      period: "2025 – Present",
+      overview:
+        "Joined CRESA, a New York commercial real estate brokerage, working across office leasing, retail expansion, and multifamily investment with brokers, investors, landlords, and C-level executives — strengthening enterprise sales, consultative selling, occupancy analysis, and investment decision-making.",
+    },
+  },
+];
+
+// New copy for the years whose meaning changed (2022–2026). Images are preserved.
+const TIMELINE_CONTENT: Record<
+  number,
+  { stageTitle: string; story: string; tags: string[]; learningPoints: string[]; takeaway: string; footerQuote: string; stats: { label: string; value: string }[] }
+> = {
+  2022: {
+    stageTitle: "Scaling Operations Across Two Countries",
+    story:
+      "As Fund Ourselves grew, I built its customer operations from a single seat into a team — then stood up a second operation in the US under WeLendUs, managing support, complaints, and collections across both countries.",
+    tags: ["Operations Manager", "Fund Ourselves · WeLendUs"],
+    learningPoints: [
+      "Built the first customer-support function from zero",
+      "Grew and led the support team as the company scaled",
+      "Launched US operations under WeLendUs",
+      "Managed six teams across the US and UK",
+    ],
+    takeaway: "Scaling a company is really about scaling its systems and its teams.",
+    footerQuote: "Operations is where strategy meets reality.",
+    stats: [
+      { label: "Teams", value: "6" },
+      { label: "Countries", value: "2" },
+      { label: "Role", value: "Operations Manager" },
+    ],
+  },
+  2023: {
+    stageTitle: "From Employee to Founder",
+    story:
+      "I left operations to build my own companies — founding Skate-It, Egypt's first registered skateboard factory, then co-founding EL3B, a closed-loop payment wallet for young gamers.",
+    tags: ["Skate-It — Founder", "EL3B — Co-Founder"],
+    learningPoints: [
+      "Founded Egypt's first registered skateboard factory",
+      "Navigated an inflation crisis and pivoted quickly",
+      "Co-founded EL3B, a fintech wallet for gamers",
+      "Built and tested EL3B's first functional MVP",
+    ],
+    takeaway: "Entrepreneurship taught me that uncertainty is the environment, not the exception.",
+    footerQuote: "Building companies is the fastest way to learn how they really work.",
+    stats: [
+      { label: "Companies founded", value: "2" },
+      { label: "Industries", value: "Manufacturing → FinTech" },
+      { label: "Biggest lesson", value: "Resilience" },
+    ],
+  },
+  2024: {
+    stageTitle: "Product, Stage & Advisory",
+    story:
+      "I co-founded HERU, an esports platform; gave a TEDx talk on how emotions shape our decisions; and advised eight companies as a business-development consultant with Xanadu.",
+    tags: ["HERU — Founder", "TEDx Speaker", "Xanadu — BD Consultant"],
+    learningPoints: [
+      "Co-founded HERU and began building its platform",
+      "Delivered a TEDx talk on emotion and decision-making",
+      "Advised eight brands as a consultant with Xanadu",
+      "Ran direct business development and enterprise sales",
+    ],
+    takeaway: "One year taught me to build products, tell stories on stage, and sell into the enterprise.",
+    footerQuote: "Strategy, storytelling and sales are the same muscle.",
+    stats: [
+      { label: "Venture", value: "HERU" },
+      { label: "Talk", value: "TEDx" },
+      { label: "Brands advised", value: "8" },
+    ],
+  },
+  2025: {
+    stageTitle: "The AI Turning Point",
+    story:
+      "AI changed how I build. I joined CRESA, a New York commercial real estate brokerage, used AI for research, analysis and presentations, finally shipped HERU's MVP with AI, and built new products like GYMAWY and Tourista.",
+    tags: ["CRESA — Commercial Real Estate", "AI Product Builder", "HERU"],
+    learningPoints: [
+      "Joined CRESA, commercial real estate in New York",
+      "Used AI for analysis, dashboards and presentations",
+      "Shipped HERU's MVP with AI — without a full-time CTO",
+      "Built production MVPs like GYMAWY and Tourista",
+    ],
+    takeaway: "AI didn't replace my workflow — it multiplied what I could build.",
+    footerQuote: "AI is most valuable when combined with deep business understanding.",
+    stats: [
+      { label: "Presentations", value: "200+" },
+      { label: "MVPs", value: "10+" },
+      { label: "Market", value: "New York" },
+    ],
+  },
+  2026: {
+    stageTitle: "Building AI Products",
+    story:
+      "I'm building production-ready AI products end to end — including ARIA CRM, an AI-powered real-estate CRM, and 24Therapy, an AI product for therapists.",
+    tags: ["AI Product Builder", "ARIA CRM", "24Therapy"],
+    learningPoints: [
+      "Built ARIA CRM, an AI-powered real-estate CRM",
+      "Built 24Therapy for mental-health professionals",
+      "Turned ideas into production MVPs using AI",
+      "Combined business strategy with AI execution",
+    ],
+    takeaway: "My career is defined by the systems and products I build, not the companies I've worked for.",
+    footerQuote: "Always learning. Always building. Always curious.",
+    stats: [
+      { label: "Products", value: "Multiple" },
+      { label: "Mission", value: "Building AI businesses" },
+      { label: "Years", value: "9+" },
+    ],
+  },
+};
+
+// Home page section order: hero → logos → portfolio → timeline → stats → by-category → cta.
+const HOME_SECTION_ORDER: Record<string, number> = {
+  PORTRAIT_HERO: 0,
+  HERO: 0,
+  LOGOS: 1,
+  PORTFOLIO: 2,
+  TIMELINE: 3,
+  STATS: 4,
+  EXPERIENCE_INDEX: 5,
+  CTA: 6,
+  CONTACT: 7,
+};
+
+async function applyTimelineExperienceLinks() {
+  const experiences = await prisma.experience.findMany({
+    select: { id: true, slug: true, company: true, role: true },
+  });
+  const years = await prisma.timelineYear.findMany({ select: { id: true, year: true } });
+  for (const y of years) {
+    const keys = TIMELINE_EXPERIENCES[y.year];
+    if (!keys) continue;
+    const ids = keys.flatMap((k) => {
+      const e = findExp(experiences, k);
+      return e ? [e.id] : [];
+    });
+    if (ids.length) await prisma.timelineYear.update({ where: { id: y.id }, data: { experienceIds: ids } });
+  }
+}
+
+async function reorderHomeSections() {
+  const home = await prisma.page.findFirst({ where: { isHome: true }, include: { sections: true } });
+  if (!home) return;
+  for (const s of home.sections) {
+    const order = HOME_SECTION_ORDER[s.type];
+    if (order != null && order !== s.order) {
+      await prisma.section.update({ where: { id: s.id }, data: { order } });
+    }
+  }
+}
+
+async function applyContentV2() {
+  let experiences: ExpLite[] = await prisma.experience.findMany({
+    select: { id: true, slug: true, company: true, role: true, order: true },
+  });
+
+  // Tidy the AI experience's slug (safe now that links are by id).
+  const ai = findExp(experiences, "ai-product-builder");
+  if (ai && ai.slug !== "ai-product-builder" && !experiences.some((e) => e.slug === "ai-product-builder" && e.id !== ai.id)) {
+    await prisma.experience.update({ where: { id: ai.id }, data: { slug: "ai-product-builder" } });
+  }
+
+  // Add the Xanadu experience if it isn't there yet.
+  if (!findExp(experiences, "xanadu")) {
+    const maxOrder = experiences.reduce((m, e) => Math.max(m, e.order ?? 0), 0);
+    await prisma.experience.create({ data: { ...XANADU_EXPERIENCE, order: maxOrder + 1, featured: false } });
+  }
+
+  experiences = await prisma.experience.findMany({
+    select: { id: true, slug: true, company: true, role: true, order: true },
+  });
+  const xanadu = findExp(experiences, "xanadu");
+
+  // Period moves + relabels on existing experiences.
+  for (const u of EXPERIENCE_UPDATES) {
+    const e = findExp(experiences, u.key);
+    if (e) await prisma.experience.update({ where: { id: e.id }, data: u.data });
+  }
+
+  // The eight Xanadu client portfolio items (create if missing; link if present).
+  if (xanadu) {
+    for (const [i, c] of XANADU_CLIENTS.entries()) {
+      const existing = await prisma.project.findUnique({ where: { slug: c.slug } });
+      if (!existing) {
+        await prisma.project.create({
+          data: {
+            slug: c.slug,
+            title: c.title,
+            category: c.category,
+            summary: c.summary,
+            services: c.services,
+            experienceId: xanadu.id,
+            experienceSlug: "xanadu",
+            year: 2024,
+            order: 100 + i,
+            featured: false,
+          },
+        });
+      } else if (!existing.experienceId) {
+        await prisma.project.update({ where: { id: existing.id }, data: { experienceId: xanadu.id } });
+      }
+    }
+  }
+
+  // Timeline: fix the mangled 2018 title, rewrite the moved years' copy (images
+  // preserved), then set each year's experience links by id.
+  const years = await prisma.timelineYear.findMany({ select: { id: true, year: true } });
+  for (const y of years) {
+    if (y.year === 2018) {
+      await prisma.timelineYear.update({ where: { id: y.id }, data: { stageTitle: "Understanding Customer Experience" } });
+    }
+    const c = TIMELINE_CONTENT[y.year];
+    if (c) {
+      await prisma.timelineYear.update({
+        where: { id: y.id },
+        data: {
+          stageTitle: c.stageTitle,
+          story: c.story,
+          tags: c.tags,
+          learningPoints: c.learningPoints,
+          takeaway: c.takeaway,
+          footerQuote: c.footerQuote,
+          stats: c.stats,
+        },
+      });
+    }
+  }
+  await applyTimelineExperienceLinks();
+
+  await reorderHomeSections();
+}
+
+// Backfill new fields on existing installs without wiping content. Each block is
+// guarded by a one-time marker in settings.extra so later manual edits are safe.
 async function patchDefaults(current: unknown) {
   const settings = current as { id: string; extra?: unknown } | null;
   if (!settings) return;
   const extra = (settings.extra && typeof settings.extra === "object" ? settings.extra : {}) as Record<string, unknown>;
+  const next = { ...extra };
   if (!extra.linksUnifiedV1) {
     await unifyLinks();
-    await prisma.siteSettings.update({
-      where: { id: settings.id },
-      data: { extra: { ...extra, linksUnifiedV1: true } },
-    });
-    console.log("Unified timeline/portfolio links to experiences by id, and repaired broken references (one-time).");
+    next.linksUnifiedV1 = true;
+    console.log("Unified timeline/portfolio links to experiences by id (one-time).");
+  }
+  if (!extra.contentV2) {
+    await applyContentV2();
+    next.contentV2 = true;
+    console.log("Applied content V2: Xanadu, timeline remap, period fixes, home order (one-time).");
+  }
+  if (JSON.stringify(next) !== JSON.stringify(extra)) {
+    await prisma.siteSettings.update({ where: { id: settings.id }, data: { extra: next as Prisma.InputJsonValue } });
   }
 }
 
@@ -165,7 +510,7 @@ async function main() {
       metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
       metaDescription:
         "A decade of evolution (2017–2026): from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
-      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true },
+      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true, contentV2: true },
     },
   });
 
@@ -1020,6 +1365,10 @@ async function main() {
       ],
     );
   }
+
+  // Apply the corrected-career revision (Xanadu, timeline remap, period fixes,
+  // home order) to the fresh data too — the exact same transform used on live.
+  await applyContentV2();
 
   // ----------------------------- Admin user ------------------------------
   const email = process.env.SEED_ADMIN_EMAIL || "admin@example.com";
