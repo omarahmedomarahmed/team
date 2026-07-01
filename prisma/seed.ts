@@ -15,8 +15,8 @@ const PICSUM = (seed: string, w = 1920, h = 1080) =>
 const HERO_VIDEO =
   "https://assets.mixkit.co/videos/preview/mixkit-waves-coming-to-the-beach-5016-large.mp4";
 
-// Bump this when seed content changes to roll it out on the next deploy.
-// Do NOT bump once you start editing content in Admin (it wipes edits).
+// Just a stamp written onto the settings row. Changing it does NOT wipe
+// anything — the seed only fully runs on an empty database (or SEED_FORCE=1).
 const SEED_VERSION = "5";
 
 async function reset() {
@@ -48,16 +48,13 @@ async function patchDefaults(_current: unknown) {
 }
 
 async function main() {
-  // Re-seed only when SEED_VERSION changes (rolls out new content once on
-  // deploy) or when SEED_FORCE=1. Otherwise skip, preserving any edits.
+  // Never wipe a database that already has content. A destructive (re)seed runs
+  // ONLY for a fresh database, or when SEED_FORCE=1 is set explicitly — so your
+  // Admin edits, uploads and settings survive every code redeploy.
   const current = await prisma.siteSettings.findFirst();
-  const storedVersion =
-    current && current.extra && typeof current.extra === "object"
-      ? (current.extra as Record<string, unknown>).seedVersion
-      : null;
-  if (current && storedVersion === SEED_VERSION && !process.env.SEED_FORCE) {
+  if (current && !process.env.SEED_FORCE) {
     await patchDefaults(current);
-    console.log(`Seed up to date (v${SEED_VERSION}) — skipping.`);
+    console.log("Existing database — preserving all content. Set SEED_FORCE=1 for one deploy to reload seed data.");
     return;
   }
 
