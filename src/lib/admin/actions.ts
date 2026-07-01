@@ -55,6 +55,15 @@ function coerceFields(fields: Field[], formData: FormData): Record<string, any> 
         data[f.name] = v.split("\n").map((s) => s.trim()).filter(Boolean);
         break;
       }
+      case "relation": {
+        if (f.multiple) {
+          data[f.name] = formData.getAll(f.name).map(String).filter(Boolean);
+        } else {
+          const v = (raw ?? "").toString().trim();
+          data[f.name] = v === "" ? null : v;
+        }
+        break;
+      }
       case "pairs": {
         const [k0, k1] = f.pairKeys ?? ["a", "b"];
         const v = (raw ?? "").toString();

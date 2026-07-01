@@ -32,6 +32,7 @@ export const SECTION_LABELS: Record<string, string> = {
   CTA: "Call to action",
   CONTACT: "Contact",
   LOGOS: "Companies / logos",
+  VIDEO: "Video (YouTube)",
   RICH_TEXT: "Text block",
   CUSTOM: "Custom",
 };
@@ -108,6 +109,15 @@ export const SECTION_FIELDS: Record<string, Field[]> = {
     { name: "eyebrow", label: "Eyebrow", type: "text", full: true },
     { name: "title", label: "Title", type: "text", full: true, help: "Logos are pulled from your Experience entries (each company's uploaded logo)." },
     { name: "subtitle", label: "Subtitle", type: "textarea", full: true },
+  ],
+  VIDEO: [
+    { name: "eyebrow", label: "Eyebrow", type: "text", full: true },
+    { name: "title", label: "Title", type: "text", full: true },
+    { name: "subtitle", label: "Subtitle", type: "textarea", full: true },
+    { name: "videoUrl", label: "YouTube link", type: "text", full: true, help: "Paste the full YouTube URL — it plays embedded on your site." },
+    { name: "caption", label: "Caption under the video", type: "text", full: true },
+    { name: "ctaLabel", label: "Button text (optional)", type: "text" },
+    { name: "ctaHref", label: "Button link (optional)", type: "text", help: "e.g. /talk or /contact" },
   ],
   RICH_TEXT: [
     { name: "title", label: "Title", type: "text" },

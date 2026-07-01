@@ -51,6 +51,7 @@ enum SectionType {
   CTA
   CONTACT
   LOGOS
+  VIDEO
   RICH_TEXT
   CUSTOM
 }
@@ -239,7 +240,8 @@ model Project {
   client          String?
   industry        String?
   category        String? // portfolio work type, e.g. "Platform", "Presentation"
-  experienceSlug  String? // optional link to an Experience case study
+  experienceId    String? // link to the parent Experience (stable id — survives renames)
+  experienceSlug  String? // legacy slug link — kept as a fallback
   summary         String?
   description     String?
   coverUrl        String?
@@ -303,7 +305,8 @@ model TimelineYear {
   stats          Json          @default("[]") // [{ label, value }]
   imageUrl       String?
   gallery        Json          @default("[]")
-  experienceSlug String? // optional link to an Experience case study
+  experienceIds  Json          @default("[]") // links to one or more Experience case studies (stable ids)
+  experienceSlug String? // legacy single slug link — kept as a fallback
   order          Int           @default(0)
   status         PublishStatus @default(PUBLISHED)
   createdAt      DateTime      @default(now())
@@ -324,6 +327,7 @@ model Experience {
   category        String? // work type / department, e.g. "Entrepreneurship"
   logoUrl         String?
   heroImageUrl    String? // cover image, shared with the timeline block + linked portfolio
+  videoUrl        String? // optional talk/demo video (e.g. the TEDx talk) — renders a "Watch" button
   portfolioSlug   String? // legacy single link — kept as a fallback
   portfolioSlugs  Json          @default("[]") // links to one or more Portfolio items
   overview        String? // 45–55 words

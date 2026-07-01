@@ -13,7 +13,8 @@ export type FieldType =
   | "icon"
   | "list" // newline-separated -> string[]
   | "pairs" // "A | B" per line -> [{ [k0]: A, [k1]: B }]
-  | "link"; // { label, href }
+  | "link" // { label, href }
+  | "relation"; // pick another record from a dropdown -> its stable id (or id[] when multiple)
 
 export type Field = {
   name: string;
@@ -23,6 +24,8 @@ export type Field = {
   full?: boolean; // span both columns
   options?: { value: string; label: string }[];
   pairKeys?: [string, string]; // for type "pairs"
+  relationTo?: string; // for type "relation": the resource key to pick from
+  multiple?: boolean; // for type "relation": allow selecting several -> id[]
 };
 
 export type Resource = {
@@ -67,9 +70,9 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "industry", label: "Industry", type: "text", full: true, help: "Separate with  ·" },
       { name: "category", label: "Category / department", type: "text", help: "Groups this case study, e.g. Entrepreneurship · Sales & Business Development." },
       { name: "logoUrl", label: "Company logo", type: "image" },
-      { name: "heroImageUrl", label: "Cover image", type: "image", full: true, help: "Shown on the case study and on the timeline; shared with the linked portfolio item." },
-      { name: "portfolioSlugs", label: "Linked portfolio items", type: "list", full: true, help: "One portfolio slug per line — e.g. heru-platform. They show as related work on this case study, and their images can be shared." },
-      { name: "overview", label: "Overview", type: "textarea", full: true, help: "45–55 words: what the company does and your relationship to it." },
+      { name: "heroImageUrl", label: "Cover image", type: "image", full: true, help: "Shown on the case study and on the timeline, and shared with any portfolio items linked to this experience." },
+      { name: "videoUrl", label: "Video link (optional)", type: "text", full: true, help: "A talk or demo video URL (e.g. the YouTube link for a TEDx talk). Shows a 'Watch' button on the case study." },
+      { name: "overview", label: "Overview", type: "textarea", full: true, help: "45–55 words: what the company does and your relationship to it. To attach portfolio items, open each one under Portfolio and set 'Part of which experience?' — they'll appear here automatically." },
       { name: "challenges", label: "Business challenges", type: "list", full: true, help: "Exactly 3 — one short line each." },
       { name: "contributions", label: "My contribution", type: "list", full: true, help: "Exactly 3 — one short line each." },
       { name: "responsibilities", label: "Responsibilities", type: "list", full: true, help: "Exactly 6 — start each with an action verb (Led, Built, Designed…)." },
@@ -104,7 +107,15 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "footerQuote", label: "Footer quote", type: "text", full: true },
       { name: "stats", label: "Stats row (optional)", type: "pairs", full: true, pairKeys: ["label", "value"], help: "One per line:  Label | Value" },
       { name: "imageUrl", label: "Image / asset", type: "image", full: true },
-      { name: "experienceSlug", label: "Links to case study (slug)", type: "text", help: "e.g. heru — optional." },
+      {
+        name: "experienceIds",
+        label: "Linked case study / studies",
+        type: "relation",
+        relationTo: "experience",
+        multiple: true,
+        full: true,
+        help: "Tick the experience(s) this year covers. Their company logo and cover image show on the year block, and the 'View case study' button links here. Renaming a case study won't break the link.",
+      },
       { name: "order", label: "Order", type: "number" },
       STATUS,
     ],
@@ -187,7 +198,14 @@ export const RESOURCES: Record<string, Resource> = {
       { name: "client", label: "Client", type: "text" },
       { name: "industry", label: "Industry", type: "text" },
       { name: "category", label: "Category", type: "text", help: "Work type, e.g. Platform · Presentation · Website · MVP · Branding." },
-      { name: "experienceSlug", label: "Linked experience (slug)", type: "text", help: "e.g. heru — links this item to a case study." },
+      {
+        name: "experienceId",
+        label: "Part of which experience?",
+        type: "relation",
+        relationTo: "experience",
+        full: true,
+        help: "Pick the experience this work came from. This is the ONE place the link is set — the case study then shows this item automatically, and they can share the same cover image. Renaming things won't break it.",
+      },
       { name: "year", label: "Year", type: "number" },
       { name: "url", label: "External URL", type: "text" },
       { name: "summary", label: "Summary", type: "textarea", full: true },

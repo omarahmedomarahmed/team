@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProjectBySlug, getExperienceBySlug, getProjects, getExperiences } from "@/lib/site";
+import { getProjectBySlug, getExperienceForProject, getProjects, getExperiences } from "@/lib/site";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
 import { MoreItems, type MoreItem } from "@/components/portfolio/MoreItems";
@@ -24,7 +24,7 @@ export default async function PortfolioDetail({ params }: Params) {
   if (!p) notFound();
 
   const [linkedExp, allProjects, featuredExp] = await Promise.all([
-    p.experienceSlug ? getExperienceBySlug(p.experienceSlug) : Promise.resolve(null),
+    getExperienceForProject(p),
     getProjects({ limit: 20 }),
     getExperiences({ featured: true, limit: 6 }),
   ]);
@@ -47,7 +47,7 @@ export default async function PortfolioDetail({ params }: Params) {
       seed: x.experienceSlug || x.slug,
     }));
   const relatedExp: MoreItem[] = featuredExp
-    .filter((e) => e.slug !== p.experienceSlug)
+    .filter((e) => e.slug !== linkedExp?.slug)
     .slice(0, 3)
     .map((e) => ({
       href: `/experience/${e.slug}`,
@@ -64,8 +64,8 @@ export default async function PortfolioDetail({ params }: Params) {
           <Link href="/portfolio" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
             <Icon name="arrow-left" size={15} /> Back to portfolio
           </Link>
-          {p.experienceSlug ? (
-            <Link href={`/experience/${p.experienceSlug}`} className="btn btn-ghost group">
+          {linkedExp ? (
+            <Link href={`/experience/${linkedExp.slug}`} className="btn btn-ghost group">
               View the experience
               <Icon name="arrow-up-right" size={16} className="btn-arrow" />
             </Link>
@@ -91,8 +91,8 @@ export default async function PortfolioDetail({ params }: Params) {
         ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {p.experienceSlug ? (
-            <Link href={`/experience/${p.experienceSlug}`} className="btn btn-primary group">
+          {linkedExp ? (
+            <Link href={`/experience/${linkedExp.slug}`} className="btn btn-primary group">
               View the experience
               <Icon name="arrow-right" size={16} className="btn-arrow" />
             </Link>

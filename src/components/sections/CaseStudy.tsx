@@ -4,6 +4,7 @@ import type { Experience, Project } from "@prisma/client";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
+import { VideoEmbed } from "@/components/ui/VideoEmbed";
 import { MoreItems, type MoreItem } from "@/components/portfolio/MoreItems";
 import { strArr, pairArr, initials, exactly, ADD_DETAIL, type Pair } from "@/lib/portfolio";
 
@@ -81,12 +82,20 @@ export function CaseStudy({
           <Link href="/experience" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
             <Icon name="arrow-left" size={15} /> Back to experience
           </Link>
-          {singleLink ? (
-            <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
-              View as portfolio item
-              <Icon name="arrow-up-right" size={16} className="btn-arrow" />
-            </Link>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {exp.videoUrl ? (
+              <a href={exp.videoUrl} target="_blank" rel="noreferrer" className="btn btn-ghost group">
+                Watch the talk
+                <Icon name="external-link" size={16} className="btn-arrow" />
+              </a>
+            ) : null}
+            {singleLink ? (
+              <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
+                View as portfolio item
+                <Icon name="arrow-up-right" size={16} className="btn-arrow" />
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {/* header */}
@@ -128,6 +137,18 @@ export function CaseStudy({
             )}
           </div>
         </Reveal>
+
+        {/* embedded talk/demo video — plays inside the site */}
+        {exp.videoUrl ? (
+          <Reveal>
+            <div className="mt-8">
+              <H>Watch the talk</H>
+              <div className="mt-3">
+                <VideoEmbed url={exp.videoUrl} title={exp.company} />
+              </div>
+            </div>
+          </Reveal>
+        ) : null}
 
         {/* overview · challenge · contribution | responsibilities | achievements */}
         <div className="mt-10 grid gap-10 lg:grid-cols-3">
@@ -213,6 +234,12 @@ export function CaseStudy({
             Get in touch
             <Icon name="arrow-right" size={18} className="btn-arrow" />
           </Link>
+          {exp.videoUrl ? (
+            <a href={exp.videoUrl} target="_blank" rel="noreferrer" className="btn btn-ghost group">
+              Watch the talk
+              <Icon name="external-link" size={18} className="btn-arrow" />
+            </a>
+          ) : null}
           {singleLink ? (
             <Link href={`/portfolio/${singleLink.slug}`} className="btn btn-ghost group">
               View as portfolio item

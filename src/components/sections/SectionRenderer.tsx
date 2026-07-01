@@ -20,6 +20,7 @@ import type {
   ContactData,
   RichTextData,
   LogosData,
+  VideoData,
   PortraitHeroData,
   TimelineData,
   ExperienceIndexData,
@@ -43,6 +44,7 @@ import { Cta } from "./Cta";
 import { Contact } from "./Contact";
 import { RichText } from "./RichText";
 import { Logos } from "./Logos";
+import { Video } from "./Video";
 
 type SectionLike = SectionBg & {
   id: string;
@@ -82,6 +84,8 @@ async function renderInner(section: SectionLike) {
       return <Cta data={data as unknown as CTAData} />;
     case "LOGOS":
       return <Logos data={data as unknown as LogosData} companies={await getExperiences()} />;
+    case "VIDEO":
+      return <Video data={data as unknown as VideoData} />;
 
     case "SERVICES": {
       if (!(await isModuleEnabled("services"))) return null;
