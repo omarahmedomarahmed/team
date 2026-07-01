@@ -73,6 +73,16 @@ export interface LogosData {
   subtitle?: string;
 }
 
+export interface VideoData {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  videoUrl?: string; // full YouTube URL; embedded and played in-site
+  caption?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
 // --------------------------- Portfolio sections ----------------------------
 
 export interface PortraitHeroData {

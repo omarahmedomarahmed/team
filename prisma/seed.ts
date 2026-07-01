@@ -324,7 +324,8 @@ const TIMELINE_CONTENT: Record<
   },
 };
 
-// Home page section order: hero → logos → portfolio → timeline → stats → by-category → cta.
+// Home page section order: hero → logos → portfolio → timeline → stats →
+// by-category → video (TEDx) → cta.
 const HOME_SECTION_ORDER: Record<string, number> = {
   PORTRAIT_HERO: 0,
   HERO: 0,
@@ -333,9 +334,13 @@ const HOME_SECTION_ORDER: Record<string, number> = {
   TIMELINE: 3,
   STATS: 4,
   EXPERIENCE_INDEX: 5,
-  CTA: 6,
-  CONTACT: 7,
+  VIDEO: 6,
+  CTA: 7,
+  CONTACT: 8,
 };
+
+// The TEDx talk — played embedded, in-site.
+const TALK_URL = "https://www.youtube.com/watch?v=gU9-HlNZgLc";
 
 async function applyTimelineExperienceLinks() {
   const experiences = await prisma.experience.findMany({
@@ -445,6 +450,98 @@ async function applyContentV2() {
   await reorderHomeSections();
 }
 
+// Content revision V3 — the TEDx talk becomes watchable in-site (dedicated page
+// + homepage section + case-study embed), and the AI experience is renamed.
+async function applyContentV3() {
+  const experiences = await prisma.experience.findMany({
+    select: { id: true, slug: true, company: true, role: true },
+  });
+
+  // Rename the AI experience's display name (URL/slug stays clean).
+  const ai = findExp(experiences, "ai-product-builder");
+  if (ai && ai.company !== "Multiple AI Products") {
+    await prisma.experience.update({ where: { id: ai.id }, data: { company: "Multiple AI Products" } });
+  }
+
+  // Point the TEDx case study at the real talk so its embed + button work.
+  const tedx = findExp(experiences, "tedx-cairo-university");
+  if (tedx) {
+    await prisma.experience.update({ where: { id: tedx.id }, data: { videoUrl: TALK_URL } });
+  }
+
+  // Dedicated /talk page — hero + embedded player.
+  if (!(await prisma.page.findUnique({ where: { slug: "talk" } }))) {
+    await prisma.page.create({
+      data: {
+        slug: "talk",
+        title: "TEDx Talk",
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        order: 4,
+        metaTitle: "TEDx Talk — Omar Abdelgawad",
+        metaDescription: "Watch Omar Abdelgawad's TEDx talk on emotion, bias, and decision-making.",
+        sections: {
+          create: [
+            {
+              type: "HERO",
+              order: 0,
+              data: {
+                eyebrow: "TEDx Cairo University",
+                title: "Emotions &",
+                highlight: "decision-making.",
+                subtitle: "My TEDx talk on how emotion and bias quietly shape the decisions we make every day.",
+              } as Prisma.InputJsonValue,
+            },
+            {
+              type: "VIDEO",
+              order: 1,
+              data: {
+                title: "Watch the talk",
+                videoUrl: TALK_URL,
+                caption: "TEDx Cairo University — the influence of emotions on decision-making.",
+                ctaLabel: "Get in touch",
+                ctaHref: "/contact",
+              } as Prisma.InputJsonValue,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Homepage "Watch my TEDx talk" section (added once).
+  const home = await prisma.page.findFirst({ where: { isHome: true }, include: { sections: true } });
+  if (home && !home.sections.some((s) => s.type === "VIDEO")) {
+    await prisma.section.create({
+      data: {
+        pageId: home.id,
+        type: "VIDEO",
+        order: 6,
+        data: {
+          eyebrow: "On stage",
+          title: "Watch my TEDx talk",
+          subtitle: "How emotion and bias shape the decisions we make.",
+          videoUrl: TALK_URL,
+          ctaLabel: "Open the talk page",
+          ctaHref: "/talk",
+        } as Prisma.InputJsonValue,
+      },
+    });
+  }
+
+  // A "TEDx Talk" nav link (appended so existing menu order is undisturbed).
+  for (const loc of ["HEADER", "FOOTER"] as const) {
+    if (!(await prisma.navItem.findFirst({ where: { url: "/talk", location: loc } }))) {
+      const max = await prisma.navItem.aggregate({ where: { location: loc, parentId: null }, _max: { order: true } });
+      await prisma.navItem.create({
+        data: { label: "TEDx Talk", url: "/talk", location: loc, order: (max._max.order ?? 0) + 1 },
+      });
+    }
+  }
+
+  await reorderHomeSections();
+}
+
 // Backfill new fields on existing installs without wiping content. Each block is
 // guarded by a one-time marker in settings.extra so later manual edits are safe.
 async function patchDefaults(current: unknown) {
@@ -461,6 +558,11 @@ async function patchDefaults(current: unknown) {
     await applyContentV2();
     next.contentV2 = true;
     console.log("Applied content V2: Xanadu, timeline remap, period fixes, home order (one-time).");
+  }
+  if (!extra.contentV3) {
+    await applyContentV3();
+    next.contentV3 = true;
+    console.log("Applied content V3: TEDx talk page + embed, AI experience rename (one-time).");
   }
   if (JSON.stringify(next) !== JSON.stringify(extra)) {
     await prisma.siteSettings.update({ where: { id: settings.id }, data: { extra: next as Prisma.InputJsonValue } });
@@ -510,7 +612,7 @@ async function main() {
       metaTitle: "Omar Abdelgawad — Founder, Product Strategist & AI Systems Architect",
       metaDescription:
         "A decade of evolution (2017–2026): from sales and operations to entrepreneurship, product strategy, commercial real estate, and AI-powered product building.",
-      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true, contentV2: true },
+      extra: { seedVersion: SEED_VERSION, linksUnifiedV1: true, contentV2: true, contentV3: true },
     },
   });
 
@@ -1369,6 +1471,8 @@ async function main() {
   // Apply the corrected-career revision (Xanadu, timeline remap, period fixes,
   // home order) to the fresh data too — the exact same transform used on live.
   await applyContentV2();
+  // TEDx talk page + homepage video + AI rename (same transform as live).
+  await applyContentV3();
 
   // ----------------------------- Admin user ------------------------------
   const email = process.env.SEED_ADMIN_EMAIL || "admin@example.com";

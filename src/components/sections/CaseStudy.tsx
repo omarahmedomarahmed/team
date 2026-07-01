@@ -4,6 +4,7 @@ import type { Experience, Project } from "@prisma/client";
 import { Reveal } from "@/components/motion/Reveal";
 import { Icon } from "@/components/ui/Icon";
 import { Placeholder } from "@/components/portfolio/Placeholder";
+import { VideoEmbed } from "@/components/ui/VideoEmbed";
 import { MoreItems, type MoreItem } from "@/components/portfolio/MoreItems";
 import { strArr, pairArr, initials, exactly, ADD_DETAIL, type Pair } from "@/lib/portfolio";
 
@@ -136,6 +137,18 @@ export function CaseStudy({
             )}
           </div>
         </Reveal>
+
+        {/* embedded talk/demo video — plays inside the site */}
+        {exp.videoUrl ? (
+          <Reveal>
+            <div className="mt-8">
+              <H>Watch the talk</H>
+              <div className="mt-3">
+                <VideoEmbed url={exp.videoUrl} title={exp.company} />
+              </div>
+            </div>
+          </Reveal>
+        ) : null}
 
         {/* overview · challenge · contribution | responsibilities | achievements */}
         <div className="mt-10 grid gap-10 lg:grid-cols-3">

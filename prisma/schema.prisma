@@ -51,6 +51,7 @@ enum SectionType {
   CTA
   CONTACT
   LOGOS
+  VIDEO
   RICH_TEXT
   CUSTOM
 }
